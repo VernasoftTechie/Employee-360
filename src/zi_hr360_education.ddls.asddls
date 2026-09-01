@@ -6,7 +6,7 @@ define view entity ZI_HR360_EDUCATION
   as select from pa0022 as E
 {
   key E.pernr as EmployeeID,
-  key E.subty as EducationType,
+  key E.subty as EducationTypeCode,
   key cast( E.begda as abap.dats ) as ValidFrom,
       E.seqnr as EducationSeqNr,
       E.slart as EducationCategory,

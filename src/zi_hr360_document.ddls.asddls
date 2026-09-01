@@ -12,7 +12,7 @@ define view entity ZI_HR360_DOCUMENT
   key cast( substring( L.object_id, 1, 8 ) as abap.numc( 8 ) ) as EmployeeID,
   key L.arc_doc_id as ArchivDocID,
       L.archiv_id  as ArchiveID,
-      L.ar_object  as DocumentType,
+      L.ar_object  as DocumentTypeCode,
       cast( L.ar_date as abap.dats ) as ArchiveDate
 }
 where L.sap_object = 'PREL'

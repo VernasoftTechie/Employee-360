@@ -73,7 +73,7 @@ CLASS zcl_hr360_issue_test IMPLEMENTATION.
     td_pay     = VALUE #( BASE td_pay     ( employeeid = iv_pernr trfgr = 'A1' ) ).
     td_contact = VALUE #( BASE td_contact ( employeeid = iv_pernr emailaddress = 'jane.doe@corp.com' country = 'US' ) ).
     td_bank    = VALUE #( BASE td_bank    ( employeeid = iv_pernr iban = 'DE00000000000000000000' ) ).
-    td_edu     = VALUE #( BASE td_edu     ( employeeid = iv_pernr educationtype = '0001' validfrom = '20100101' ) ).
+    td_edu     = VALUE #( BASE td_edu     ( employeeid = iv_pernr educationtypecode = '0001' validfrom = '20100101' ) ).
     td_qual    = VALUE #( BASE td_qual    ( employeeid = iv_pernr qualificationid = 'Q0000001' validfrom = '20150101' ) ).
   ENDMETHOD.
 

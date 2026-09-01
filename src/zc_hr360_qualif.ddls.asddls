@@ -14,7 +14,7 @@ define view entity ZC_HR360_QUALIF
       @UI.lineItem: [{ position: 40 }]
       ValidTo,
       @UI.lineItem: [{ position: 50 }]
-      QualificationType,
+      QualificationTypeCode,
       @UI.lineItem: [{ position: 60 }]
       Proficiency,
       @UI.lineItem: [{ position: 70 }]

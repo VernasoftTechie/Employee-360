@@ -10,7 +10,7 @@ define view entity ZC_HR360_DOCUMENT
       @UI.lineItem: [{ position: 20 }]
   key ArchivDocID,
       @UI.lineItem: [{ position: 30 }]
-      DocumentType,
+      DocumentTypeCode,
       @UI.lineItem: [{ position: 40 }]
       ArchiveDate,
       @UI.lineItem: [{ position: 50 }]

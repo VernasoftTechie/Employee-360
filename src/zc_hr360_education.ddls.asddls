@@ -9,7 +9,7 @@ define view entity ZC_HR360_EDUCATION
       @UI.lineItem: [{ position: 10 }]
   key EmployeeID,
       @UI.lineItem: [{ position: 20 }]
-  key EducationType,
+  key EducationTypeCode,
       @UI.lineItem: [{ position: 30 }]
   key ValidFrom,
       @UI.lineItem: [{ position: 40 }]

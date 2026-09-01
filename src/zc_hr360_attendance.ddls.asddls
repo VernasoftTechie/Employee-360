@@ -10,7 +10,7 @@ define view entity ZC_HR360_ATTENDANCE
       @UI.lineItem: [{ position: 20 }]
   key AttendanceFrom,
       @UI.lineItem: [{ position: 30 }]
-  key AttendanceType,
+  key AttendanceTypeCode,
       @UI.lineItem: [{ position: 40 }]
       AttendanceTo,
       @UI.lineItem: [{ position: 50 }]
