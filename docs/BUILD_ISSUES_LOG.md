@@ -44,6 +44,8 @@ commit, re-activating each time. Slower per feature, far fewer dead rounds.
 **Rule:** never expose a raw PA-infotype `BEGDA`/`ENDDA`/`GBDAT`/`DESTA`/`DEEND`/…
 date to OData. Always `cast( x as abap.dats )`. Times → `cast( x as abap.tims )`.
 
+| A25 | 🔴 **Fiori preview**: loads to a **blank white screen**, no error | A Fiori Elements List Report renders **nothing** without `@UI` annotations — at minimum `@UI.headerInfo` + one `@UI.lineItem`. The service had zero UI annotations (metadata extensions were removed in C2/A18 because the hand-written abapGit DDLX format failed to import). | v0.17: added **minimal `@UI` inline** in `ZC_HR360_EMPLOYEE` / `ZC_HR360_ISSUE` (headerInfo, ~8 lineItems, ~4 selectionFields, criticality on QualityStatus). Rulebook §2 wants these in a Metadata Extension — that move happens once the correct abapGit DDLX serialization is confirmed by creating one MDE in ADT and reading back how abapGit serializes it. | v0.17 |
+
 **⚠ Self-note:** before every "column unknown / reserved / reference" conclusion,
 check this table first. STAT2 (A11) was flagged in an earlier screenshot and I
 did not act on it — do not repeat.
