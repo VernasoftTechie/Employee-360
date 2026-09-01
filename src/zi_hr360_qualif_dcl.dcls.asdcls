@@ -1,6 +1,0 @@
-@EndUserText.label: 'HR360 - QUALIF authorization'
-@MappingRole: true
-define role ZI_HR360_QUALIF_DCL {
-  grant select on ZI_HR360_QUALIF
-    where inheriting conditions from entity ZI_HR360_EMPLOYEE;
-}

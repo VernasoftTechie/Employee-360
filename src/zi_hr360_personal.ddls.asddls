@@ -1,7 +1,6 @@
-@AccessControl.authorizationCheck: #CHECK
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Personal Details'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 define view entity ZI_HR360_PERSONAL
   as select from pa0002 as P
@@ -28,9 +27,6 @@ define view entity ZI_HR360_PERSONAL
 
     left outer join t502t  as MarStat on  MarStat.sprsl = $session.system_language
                                       and MarStat.famst = P.famst
-
-  association to parent ZI_HR360_EMPLOYEE as _Employee
-    on $projection.EmployeeID = _Employee.EmployeeID
 {
   key P.pernr                                as EmployeeID,
       P.vorna                                as FirstName,
@@ -53,9 +49,7 @@ define view entity ZI_HR360_PERSONAL
       Bank.bankl                             as BankKey,
       Bank.bankn                             as BankAccount,
       Bank.iban                              as IBAN,
-      Bank.bkont                             as BankControlKey,
-
-      _Employee
+      Bank.bkont                             as BankControlKey
 }
 where P.begda <= $session.system_date
   and P.endda >= $session.system_date

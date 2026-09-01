@@ -33,7 +33,6 @@ define root view entity ZC_HR360_EMPLOYEE
       OrgUnitName,
       Position,
       CostCenter,
-      ManagerID,
       ManagerName,
 
       TotalIssueCount,
@@ -57,7 +56,5 @@ define root view entity ZC_HR360_EMPLOYEE
       _Payroll       : redirected to ZC_HR360_PAYROLL,
       _Document      : redirected to ZC_HR360_DOCUMENT,
       _Timeline      : redirected to ZC_HR360_TIMELINE,
-      _DataQuality   : redirected to ZC_HR360_ISSUE,
-      _Manager       : redirected to ZC_HR360_EMPLOYEE,
-      _DirectReport  : redirected to ZC_HR360_EMPLOYEE
+      _DataQuality   : redirected to ZC_HR360_ISSUE
 }

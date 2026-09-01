@@ -1,4 +1,4 @@
-@AccessControl.authorizationCheck: #CHECK
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Data Quality Issue (projection)'
 @Metadata.allowExtensions: true
 

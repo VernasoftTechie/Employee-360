@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Employee Timeline'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 // Chronological event feed. UNION ALL - every branch emits the same columns
 // with identical types. Keys are defined by the first branch. Events come from

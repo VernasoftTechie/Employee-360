@@ -11,6 +11,5 @@ define service ZHR360_UI_SRVD {
   expose ZC_HR360_DOCUMENT     as Document;
   expose ZC_HR360_TIMELINE     as TimelineEvent;
   expose ZC_HR360_ISSUE        as DataQualityIssue;
-  expose ZI_HR360_ORG_HIER     as OrgNode;
   expose ZC_HR360_KPI_OVERVIEW as KpiOverview;
 }

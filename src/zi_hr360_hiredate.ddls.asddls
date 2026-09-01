@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Hire Date'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #BASIC
 
 // Earliest start date of a hiring-type personnel action. '01' is the SAP
 // default hiring action (T529A); adjust the predicate to the client's set.

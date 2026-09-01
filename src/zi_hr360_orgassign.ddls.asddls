@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'HR360 - Organization and Position'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 define view entity ZI_HR360_ORGASSIGN
   as select from pa0001 as O
@@ -23,10 +22,6 @@ define view entity ZI_HR360_ORGASSIGN
                                             and POS.endda >= $session.system_date
     left outer join t513s           as JOBT on  JOBT.sprsl = $session.system_language
                                             and JOBT.stell = O.stell
-    left outer join ZI_HR360_MANAGER as Mgr  on  Mgr.EmployeeID = O.pernr
-
-  association to parent ZI_HR360_EMPLOYEE as _Employee
-    on $projection.EmployeeID = _Employee.EmployeeID
 {
   key O.pernr              as EmployeeID,
       O.bukrs              as CompanyCode,
@@ -44,10 +39,8 @@ define view entity ZI_HR360_ORGASSIGN
       O.stell              as Job,
       JOBT.stltx           as JobName,
       O.kostl              as CostCenter,
-      Mgr.ManagerID        as ManagerID,
-      Mgr.ManagerName      as ManagerName,
-
-      _Employee
+      cast( 0 as abap.numc( 8 ) )  as ManagerID,
+      cast( '' as abap.char( 80 ) ) as ManagerName
 }
 where O.begda <= $session.system_date
   and O.endda >= $session.system_date

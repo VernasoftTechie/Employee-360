@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'HR360 - Employee Basic (anchor)'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 define view entity ZI_HR360_EMP_BASIC
   as select from pa0001 as OrgAssignment

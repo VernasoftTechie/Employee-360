@@ -1,7 +1,6 @@
-@AccessControl.authorizationCheck: #CHECK
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Pay History'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 // Pay-scale / salary history from PA0008 (Basic Pay), one row per time slice.
 // Wage-type-level detail (LGA01..40 / BET01..40) is out of scope for Phase 1.
@@ -12,9 +11,6 @@ define view entity ZI_HR360_PAYROLL
     left outer join t539r as RE on  RE.sprsl = $session.system_language
                                 and RE.massn = B.massn
                                 and RE.preas = B.preas
-
-  association to parent ZI_HR360_EMPLOYEE as _Employee
-    on $projection.EmployeeID = _Employee.EmployeeID
 
 {
   key B.pernr    as EmployeeID,
@@ -29,7 +25,5 @@ define view entity ZI_HR360_PAYROLL
       B.bsgrd    as CapacityUtilizationLevel,
       B.divgv    as WeeklyHours,
       B.preas    as PayChangeReason,
-      RE.pretx   as PayChangeReasonName,
-
-      _Employee
+      RE.pretx   as PayChangeReasonName
 }

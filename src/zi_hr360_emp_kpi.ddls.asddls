@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Employee Data Quality KPIs'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #BASIC
 
 // Per-employee data-quality issue counts, aggregated over ZI_HR360_ISSUE.
 // Kept separate so the root ZI_HR360_EMPLOYEE is not an aggregating view.

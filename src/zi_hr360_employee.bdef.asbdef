@@ -1,10 +1,13 @@
-unmanaged;
+unmanaged implementation in class zbp_hr360_employee unique;
 strict ( 2 );
 
+// Read-only BO. No create / update / delete on any entity.
+// Child entities are association targets, each with its own behavior
+// definition + behavior pool (read only) - the HR_DataQuality_RAP_PoC pattern.
+
 define behavior for ZI_HR360_EMPLOYEE alias Employee
-authorization master ( instance )
+authorization master ( global )
 {
-  // read-only BO: no create / update / delete on any entity
   association _Personal      { }
   association _OrgAssignment  { }
   association _Education      { }
@@ -15,46 +18,4 @@ authorization master ( instance )
   association _Document       { }
   association _Timeline       { }
   association _DataQuality    { }
-  association _Manager        { }
-  association _DirectReport   { }
-}
-
-define behavior for ZI_HR360_PERSONAL alias Personal
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_ORGASSIGN alias OrgAssignment
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_EDUCATION alias Education
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_QUALIF alias Qualification
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_LEAVE alias LeaveBalance
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_ATTENDANCE alias Attendance
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_PAYROLL alias PayrollItem
-{
-  association _Employee { }
-}
-
-define behavior for ZI_HR360_DOCUMENT alias Document
-{
-  association _Employee { }
 }

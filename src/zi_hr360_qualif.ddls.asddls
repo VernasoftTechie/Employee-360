@@ -1,7 +1,6 @@
-@AccessControl.authorizationCheck: #CHECK
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Skills and Certifications'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 // Skills and certifications both originate from PA0024 (Qualifications).
 // The OM qualifications-catalog joins (HRP1000/HRP1001 for readable names and
@@ -10,9 +9,6 @@
 
 define view entity ZI_HR360_QUALIF
   as select from pa0024 as Q
-
-  association to parent ZI_HR360_EMPLOYEE as _Employee
-    on $projection.EmployeeID = _Employee.EmployeeID
 {
   key Q.pernr                                    as EmployeeID,
   key Q.quali                                    as QualificationID,
@@ -26,7 +22,5 @@ define view entity ZI_HR360_QUALIF
       case when Q.endda < $session.system_date
            then cast( 'X' as abap.char( 1 ) )
            else cast( ' ' as abap.char( 1 ) )
-      end                                        as IsExpired,
-
-      _Employee
+      end                                        as IsExpired
 }

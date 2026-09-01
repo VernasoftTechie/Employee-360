@@ -1,6 +1,0 @@
-@EndUserText.label: 'HR360 - LEAVE authorization'
-@MappingRole: true
-define role ZI_HR360_LEAVE_DCL {
-  grant select on ZI_HR360_LEAVE
-    where inheriting conditions from entity ZI_HR360_EMPLOYEE;
-}

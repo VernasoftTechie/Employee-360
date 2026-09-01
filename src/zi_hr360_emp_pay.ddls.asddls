@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Employee Basic Pay presence'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #BASIC
 
 define view entity ZI_HR360_EMP_PAY
   as select from pa0008

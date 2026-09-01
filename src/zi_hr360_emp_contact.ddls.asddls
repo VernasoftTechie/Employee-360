@@ -1,7 +1,6 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Employee Contact and Address'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #BASIC
 
 define view entity ZI_HR360_EMP_CONTACT
   as select from pa0002 as PersonalData

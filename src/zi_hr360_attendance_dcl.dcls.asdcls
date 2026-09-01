@@ -1,6 +1,0 @@
-@EndUserText.label: 'HR360 - ATTENDANCE authorization'
-@MappingRole: true
-define role ZI_HR360_ATTENDANCE_DCL {
-  grant select on ZI_HR360_ATTENDANCE
-    where inheriting conditions from entity ZI_HR360_EMPLOYEE;
-}

@@ -4,7 +4,6 @@
 // permits are returned. The projection ZC_HR360_ISSUE is #CHECK.
 @EndUserText.label: 'HR360 - Data Quality Issue'
 @Metadata.ignorePropagatedAnnotations: true
-@VDM.viewType: #COMPOSITE
 
 //----------------------------------------------------------------------------
 // EXTENSIBLE CHECK FRAMEWORK (reused & extended from HR_DataQuality_RAP_PoC).

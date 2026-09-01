@@ -1,51 +1,33 @@
-@AccessControl.authorizationCheck: #CHECK
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Data Quality KPI Overview'
 @Metadata.allowExtensions: true
-@Analytics.query: true
-@VDM.viewType: #CONSUMPTION
 
-// HR-wide data-quality analytics. Aggregates ZI_HR360_EMPLOYEE by legal entity /
-// personnel area / employee group / org unit / quality status.
+// HR-wide data-quality KPIs, aggregated from ZI_HR360_EMPLOYEE by legal entity /
+// personnel area / employee group / org unit / quality status. Plain aggregating
+// view (no @Analytics.query) so it activates on any release; App 2 consumes it
+// as a List Report / chart.
 
 define view entity ZC_HR360_KPI_OVERVIEW
   as select from ZI_HR360_EMPLOYEE
 {
-      @AnalyticsDetails.query.axis: #ROWS
-      CompanyCode,
-      @AnalyticsDetails.query.axis: #ROWS
-      PersonnelArea,
-      PersonnelAreaName,
-      @AnalyticsDetails.query.axis: #ROWS
-      EmployeeGroup,
-      EmployeeGroupName,
-      @AnalyticsDetails.query.axis: #ROWS
-      OrgUnit,
-      OrgUnitName,
-      QualityStatus,
-
-      @DefaultAggregation: #SUM
-      @EndUserText.label: 'Total Employees'
-      cast( 1 as abap.int4 )                                             as TotalEmployees,
-
-      @DefaultAggregation: #SUM
-      @EndUserText.label: 'Employees Without Issues'
-      case when TotalIssueCount = 0 then 1 else 0 end                    as EmployeesWithoutIssues,
-
-      @DefaultAggregation: #SUM
-      @EndUserText.label: 'Employees With Issues'
-      case when TotalIssueCount > 0 then 1 else 0 end                    as EmployeesWithIssues,
-
-      @DefaultAggregation: #SUM
-      @EndUserText.label: 'Missing Data Count'
-      TotalIssueCount                                                    as MissingDataCount,
-
-      @DefaultAggregation: #SUM
-      CriticalIssueCount,
-
-      @DefaultAggregation: #SUM
-      WarningIssueCount,
-
-      @DefaultAggregation: #AVG
-      @EndUserText.label: 'Average Completeness %'
-      CompletenessPercent                                               as AvgCompletenessPercent
+  key CompanyCode                                             as CompanyCode,
+  key PersonnelArea                                           as PersonnelArea,
+  key EmployeeGroup                                           as EmployeeGroup,
+  key OrgUnit                                                 as OrgUnit,
+  key QualityStatus                                           as QualityStatus,
+      max( PersonnelAreaName )                                as PersonnelAreaName,
+      max( OrgUnitName )                                      as OrgUnitName,
+      count( * )                                              as TotalEmployees,
+      sum( case when TotalIssueCount = 0 then 1 else 0 end )  as EmployeesWithoutIssues,
+      sum( case when TotalIssueCount > 0 then 1 else 0 end )  as EmployeesWithIssues,
+      sum( TotalIssueCount )                                  as MissingDataCount,
+      sum( CriticalIssueCount )                               as CriticalIssueCount,
+      sum( WarningIssueCount )                                as WarningIssueCount,
+      avg( CompletenessPercent as abap.dec( 5, 1 ) )          as AvgCompletenessPercent
 }
+group by
+  CompanyCode,
+  PersonnelArea,
+  EmployeeGroup,
+  OrgUnit,
+  QualityStatus
