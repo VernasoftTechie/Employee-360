@@ -1,7 +1,13 @@
 @EndUserText.label: 'HR Employee 360 - UI Service'
 define service ZHR360_UI_SRVD {
   expose ZC_HR360_EMPLOYEE     as Employee;
-  expose ZC_HR360_ISSUE        as DataQualityIssue;
   expose ZC_HR360_EDUCATION    as Education;
+  expose ZC_HR360_QUALIF       as Qualification;
+  expose ZC_HR360_LEAVE        as LeaveBalance;
+  expose ZC_HR360_ATTENDANCE   as Attendance;
+  expose ZC_HR360_PAYROLL      as PayrollItem;
+  expose ZC_HR360_DOCUMENT     as Document;
+  expose ZC_HR360_TIMELINE     as TimelineEvent;
+  expose ZC_HR360_ISSUE        as DataQualityIssue;
   expose ZC_HR360_KPI_OVERVIEW as KpiOverview;
 }

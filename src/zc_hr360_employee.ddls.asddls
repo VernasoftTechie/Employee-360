@@ -16,13 +16,26 @@
 define view entity ZC_HR360_EMPLOYEE
   as select from ZI_HR360_EMPLOYEE
 
-  association [0..*] to ZC_HR360_EDUCATION as _Education
-    on _Education.EmployeeID = $projection.EmployeeID
+  association [0..*] to ZC_HR360_EDUCATION  as _Education     on _Education.EmployeeID     = $projection.EmployeeID
+  association [0..*] to ZC_HR360_QUALIF     as _Qualification on _Qualification.EmployeeID = $projection.EmployeeID
+  association [0..*] to ZC_HR360_LEAVE      as _LeaveBalance  on _LeaveBalance.EmployeeID  = $projection.EmployeeID
+  association [0..*] to ZC_HR360_ATTENDANCE as _Attendance    on _Attendance.EmployeeID    = $projection.EmployeeID
+  association [0..*] to ZC_HR360_PAYROLL    as _Payroll       on _Payroll.EmployeeID       = $projection.EmployeeID
+  association [0..*] to ZC_HR360_DOCUMENT   as _Document      on _Document.EmployeeID      = $projection.EmployeeID
+  association [0..*] to ZC_HR360_TIMELINE   as _Timeline      on _Timeline.EmployeeID      = $projection.EmployeeID
+  association [0..*] to ZC_HR360_ISSUE      as _DataQuality   on _DataQuality.EmployeeID   = $projection.EmployeeID
 
 {
       @UI.facet: [
-        { id: 'Header',    purpose: #HEADER,   type: #IDENTIFICATION_REFERENCE, label: 'Employee',        position: 10 },
-        { id: 'Education',  purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Education', label: 'Education', position: 20 }
+        { id: 'Header',      purpose: #HEADER,   type: #IDENTIFICATION_REFERENCE,                                     label: 'Employee',       position: 10 },
+        { id: 'Education',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Education',    label: 'Education',       position: 20 },
+        { id: 'Skills',       purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Qualification', label: 'Skills & Certs', position: 30 },
+        { id: 'Leave',        purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_LeaveBalance',  label: 'Leave & Quotas', position: 40 },
+        { id: 'Attendance',   purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Attendance',    label: 'Attendance',     position: 50 },
+        { id: 'Payroll',      purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Payroll',       label: 'Pay History',    position: 60 },
+        { id: 'Documents',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Document',      label: 'Documents',      position: 70 },
+        { id: 'Timeline',     purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Timeline',      label: 'Timeline',       position: 80 },
+        { id: 'DataQuality',  purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_DataQuality',   label: 'Data Quality',   position: 90 }
       ]
 
       @UI.lineItem:      [{ position: 10 }]
@@ -113,5 +126,12 @@ define view entity ZC_HR360_EMPLOYEE
       @UI.identification: [{ position: 200 }]
       CompletenessPercent,
 
-      _Education
+      _Education,
+      _Qualification,
+      _LeaveBalance,
+      _Attendance,
+      _Payroll,
+      _Document,
+      _Timeline,
+      _DataQuality
 }
