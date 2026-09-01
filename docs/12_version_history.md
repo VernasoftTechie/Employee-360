@@ -1,6 +1,37 @@
 # Employee-360 — Version History (Doc 12)
 
 All notable changes to the design and the repository.
+See `BUILD_ISSUES_LOG.md` for the full error→cause→fix trail of v0.5–v0.15.
+
+---
+
+## v0.15 — 2026-09-02 — 🟢 FIRST GREEN BUILD
+
+Everything activates on SAP S/4HANA. Service binding `ZHR360_UI_SRVB_O4`
+(OData V4 – UI) published with 3 entity sets: **Employee**, **DataQualityIssue**,
+**KpiOverview**.
+
+**Scope of the green build (deliberately reduced — see BUILD_ISSUES_LOG.md §E / A18–A19):**
+- `ZC_HR360_EMPLOYEE` — read-only query view: identity, employment, org snapshot,
+  flattened personal details (address, email, mobile, IBAN, marital status),
+  + data-quality KPIs (`TotalIssueCount`, `CriticalIssueCount`, `WarningIssueCount`,
+  `QualityStatus`, `QualityStatusCriticality`, `CompletenessPercent`).
+- `ZC_HR360_ISSUE` — the 12-check data-quality framework, one row per (employee, failed check).
+- `ZC_HR360_KPI_OVERVIEW` — HR-wide aggregates by company/personnel area/EE group/org unit.
+- 3 executable reports (`ZHR360_R_EMP_MASTER_EXPORT`, `_MISSING_DATA`, `_HR_AUDIT`)
+  + `ZCL_HR360_REPORT_ENGINE`, `ZCL_HR360_ORG_READER`, `ZCL_HR360_ISSUE_TEST`.
+- `ZMSG_HR360`, DCL on `P_ORGIN` (`ZI_HR360_EMP_BASIC` / `ZI_HR360_ORGASSIGN` / `ZI_HR360_EMPLOYEE`).
+- 17 `ZI_HR360_*` interface views active; 10 of them (education, qualif, leave,
+  attendance, payroll, document, timeline, orgassign, personal, emp_kpi) are the
+  building blocks for the next increments.
+
+**Not yet in the green build (next increments, one entity per commit):**
+- Transactional RAP BO wrapper (currently plain read-only query views).
+- Child entity sets / Object-Page facets: Education, Skills, Leave, Attendance,
+  Pay History, Documents, Timeline.
+- Metadata extensions (UI annotations) — authored in ADT/BAS against the live system.
+- Text columns (`*Name`) — removed pending DDIC verification of each text table.
+- Org-navigation hierarchy, manager resolution.
 
 ---
 
