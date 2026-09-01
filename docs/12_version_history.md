@@ -5,6 +5,23 @@ See `BUILD_ISSUES_LOG.md` for the full error→cause→fix trail of v0.5–v0.15
 
 ---
 
+## v0.16–v0.22 — 2026-09-02 — live data + all detail facets
+
+- v0.16 cast all infotype dates to `abap.dats` (Fiori "conversion ext PDATE").
+- v0.17 inline `@UI` so the List Report shows columns.
+- v0.18–v0.20 diagnosed "no rows" (was empty client — **live: 30,532 employees,
+  client 1000**); fixed the perpetual abapGit pull diff (missing UTF-8 BOM on
+  `.xml` metadata — G3); shipped the service binding + `.sush` in the repo.
+- v0.21 restored `P_ORGIN` DCL; added **Education** facet.
+- v0.22 added the rest: **Skills, Leave, Attendance, Pay History, Documents,
+  Timeline, Data Quality** — each a `ZC_HR360_*` query view + association +
+  `@UI.facet` on `ZC_HR360_EMPLOYEE`. Service exposes 10 entity sets. Object Page
+  now has a section per HR data area.
+
+Full error trail: `BUILD_ISSUES_LOG.md` A1–A26, G1–G3.
+
+---
+
 ## v0.15 — 2026-09-02 — 🟢 FIRST GREEN BUILD
 
 Everything activates on SAP S/4HANA. Service binding `ZHR360_UI_SRVB_O4`
