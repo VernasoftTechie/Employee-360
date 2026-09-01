@@ -25,7 +25,7 @@ define root view entity ZI_HR360_EMPLOYEE
       Emp.DateOfBirth                                      as DateOfBirth,
       Emp.Gender                                           as Gender,
       Emp.Nationality                                      as Nationality,
-      Emp.EmploymentStatus                                 as EmploymentStatus,
+      cast( '' as abap.char( 2 ) )                         as EmploymentStatus,
       Hd.HireDate                                          as HireDate,
       Emp.CompanyCode                                      as CompanyCode,
       Emp.PersonnelArea                                    as PersonnelArea,
@@ -33,7 +33,7 @@ define root view entity ZI_HR360_EMPLOYEE
       Emp.EmployeeGroup                                    as EmployeeGroup,
       Emp.EmployeeSubgroup                                 as EmployeeSubgroup,
       Emp.OrgUnit                                          as OrgUnit,
-      Emp.Position                                         as Position,
+      Emp.PositionId                                       as PositionId,
       Emp.CostCenter                                       as CostCenter,
 
       cast( coalesce( Kpi.TotalIssueCount,    0 ) as abap.int4 ) as TotalIssueCount,

@@ -20,7 +20,24 @@ with the root cause and the fix. Use this to avoid repeating the same mistakes.
 | A7 | 🔴 "CAST of type INT1 to type NUMC is not possible" | `cast( 0 as abap.numc( 8 ) )` — the literal `0` is typed `INT1`; INT→NUMC cast is not allowed. | Cast a **char** literal: `cast( '00000000' as abap.numc( 8 ) )`, or drop the field. | v0.9 |
 | A8 | 🟡 "CASE expression without ELSE branch can lead to NULL values" | `count( distinct case when … then … end )` with no `ELSE`. Intentional (NULL is ignored by `count`), but it is a warning. | Rewrote as `sum( case when … then 1 else 0 end )` where possible — also removes the warning. | 5982fad |
 | A9 | 🟡 "Annotation value '…' length (44) too long. Type must be 'STRING(40)'" | `@EndUserText.label` (and other VDM annotations) are capped at **40 characters**. | Keep every label ≤ 40 chars. | v0.9 |
-| A10 | 🔴 "The column <X> is unknown" (MOABW, QUOMO, SPRSL, STEXT, SLTP1, STAT2, RESERVE, PRETX, MASSN, PREAS) | Text-table / helper-table joins written against **field names that don't exist** in that table on this system (my HR text-table knowledge was unreliable — e.g. time infotypes don't store `MOABW`; `TOAAT` has no `RESERVE`; `T556B` has no `SPRSL`). | **Removed every text-table join** from the interface views for now. Views expose the raw infotype codes only; readable texts are re-added later, verified against the live DDIC. | v0.9 |
+| A10 | 🔴 "The column <X> is unknown" (MOABW, QUOMO, SPRSL, STEXT, SLTP1, RESERVE, PRETX, MASSN, PREAS) | Text-table / helper-table joins written against **field names that don't exist** in that table on this system (my HR text-table knowledge was unreliable — e.g. time infotypes don't store `MOABW`; `TOAAT` has no `RESERVE`; `T556B` has no `SPRSL`). | **Removed every text-table join** from the interface views. Views expose the raw infotype codes only; readable texts are re-added later, verified against the live DDIC. | v0.9 |
+| A11 | 🔴 "The column STAT2 is unknown" — **REPEATED across v0.7/v0.8/v0.9** | `PA0001` on this system does **not** expose `STAT2` (nor `STAT1`/`STAT3`). Employment status is not on the org-assignment infotype here. I kept `O.stat2` after it first errored — the exact "repeating the same mistake" the user called out. | Removed `EmploymentStatus` from `ZI_HR360_EMP_BASIC` entirely. Root/reports/KPI now use a literal placeholder or omit it. Re-source from `PA0000-STAT2` only after verifying that field exists in SE11. | v0.10 |
+| A12 | 🔴 "POSITION is a reserved word (choose another field name)" | `Position` / `POSITION` is a reserved word in CDS / the generated DB view. Cannot be a CDS element name. | Renamed the element `Position` → `PositionId` everywhere (views, projections, root, report engine, tests). Other names to avoid: `CLIENT`, `KEY`, `USER`, `LANGUAGE`, `DATE`, `TIME`, `VALUE`, `LEVEL`, `NAME`, `TYPE` (context-dependent). | v0.10 |
+| A13 | 🔴 "ZI_HR360_PAYROLL-ANNUALSALARY reference information missing or data type wrong" | A DDIC **CURR** (amount) or **QUAN** (quantity) field selected into a CDS element needs a **reference field** (currency/unit key) that is also in the view **and** a `@Semantics.amount.currencyCode` / `.quantity.unitOfMeasure` annotation — OR you must `cast` it to a plain type. Affected: `ANSAL` (CURR), `ANZHL`/`KVERB` (QUAN), `ABWTG`/`STDAZ` (QUAN). | `cast( <field> as abap.dec( n, 2 ) )` for every amount/quantity field — plain decimal, no reference needed. Proper `@Semantics.amount…` added later with the currency/unit column. | v0.10 |
+
+**⚠ Self-note:** before every "column unknown / reserved / reference" conclusion,
+check this table first. STAT2 (A11) was flagged in an earlier screenshot and I
+did not act on it — do not repeat.
+
+### CDS reserved words seen so far → never use as an element name
+`POSITION`. (SAP list also includes `CLIENT KEY USER LANGUAGE DATE TIME VALUE
+LEVEL NAME TYPE UNION ALL DISTINCT` in various contexts — when in doubt add an
+`Id`/`Code`/`Text` suffix.)
+
+### DDIC field types that need a `cast` (or a reference field + `@Semantics`)
+- **CURR** (amounts): `PA0008-ANSAL`, wage-type `BETxx` — `cast( … as abap.dec(15,2) )`
+- **QUAN** (quantities/hours/days): `PA2006-ANZHL/KVERB`, `PA2002-ABWTG/STDAZ`,
+  `PA0008-DIVGV` — `cast( … as abap.dec(11,2) )`
 
 ---
 

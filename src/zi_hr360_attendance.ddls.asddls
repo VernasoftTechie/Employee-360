@@ -9,8 +9,8 @@ define view entity ZI_HR360_ATTENDANCE
   key A.begda as AttendanceFrom,
   key A.awart as AttendanceType,
       A.endda as AttendanceTo,
-      A.abwtg as AttendanceDays,
-      A.stdaz as AttendanceHours,
+      cast( A.abwtg as abap.dec( 7, 2 ) ) as AttendanceDays,
+      cast( A.stdaz as abap.dec( 7, 2 ) ) as AttendanceHours,
       A.beguz as StartTime,
       A.enduz as EndTime
 }

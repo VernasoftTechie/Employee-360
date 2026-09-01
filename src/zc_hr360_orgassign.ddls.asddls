@@ -4,5 +4,5 @@
 define view entity ZC_HR360_ORGASSIGN as projection on ZI_HR360_ORGASSIGN
 {
   key EmployeeID, CompanyCode, PersonnelArea, PersonnelSubarea, EmployeeGroup,
-      EmployeeSubgroup, OrgUnit, Position, Job, CostCenter
+      EmployeeSubgroup, OrgUnit, PositionId, Job, CostCenter
 }

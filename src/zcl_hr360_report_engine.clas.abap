@@ -28,7 +28,7 @@ CLASS zcl_hr360_report_engine IMPLEMENTATION.
         e~CompanyCode         AS company_code,
         e~PersonnelArea       AS personnel_area,
         e~OrgUnit             AS org_unit,
-        e~Position            AS position_name,
+        e~PositionId            AS position_name,
         e~CostCenter          AS cost_center,
         p~EmailAddress        AS email_address,
         p~MobileNumber        AS mobile_number,

@@ -25,7 +25,7 @@ define root view entity ZC_HR360_EMPLOYEE
       EmployeeSubgroup,
       @Search.defaultSearchElement: true
       OrgUnit,
-      Position,
+      PositionId,
       CostCenter,
       TotalIssueCount,
       CriticalIssueCount,

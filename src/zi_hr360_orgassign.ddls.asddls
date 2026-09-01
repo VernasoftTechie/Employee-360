@@ -12,7 +12,7 @@ define view entity ZI_HR360_ORGASSIGN
       O.persg as EmployeeGroup,
       O.persk as EmployeeSubgroup,
       O.orgeh as OrgUnit,
-      O.plans as Position,
+      O.plans as PositionId,
       O.stell as Job,
       O.kostl as CostCenter
 }

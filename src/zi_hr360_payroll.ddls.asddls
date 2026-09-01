@@ -2,6 +2,9 @@
 @EndUserText.label: 'HR360 - Pay History'
 @Metadata.ignorePropagatedAnnotations: true
 
+// Amount / quantity fields cast to plain decimal - CURR/QUAN need a reference
+// field + @Semantics otherwise (BUILD_ISSUES_LOG.md A13).
+
 define view entity ZI_HR360_PAYROLL
   as select from pa0008 as B
 {
@@ -12,8 +15,8 @@ define view entity ZI_HR360_PAYROLL
       B.trfgb as PayScaleArea,
       B.trfgr as PayScaleGroup,
       B.trfst as PayScaleLevel,
-      B.ansal as AnnualSalary,
+      cast( B.ansal as abap.dec( 15, 2 ) ) as AnnualSalary,
       B.waers as Currency,
-      B.bsgrd as CapacityUtilLevel,
-      B.divgv as WeeklyHours
+      cast( B.bsgrd as abap.dec( 5, 2 ) )  as CapacityUtilLevel,
+      cast( B.divgv as abap.dec( 7, 2 ) )  as WeeklyHours
 }

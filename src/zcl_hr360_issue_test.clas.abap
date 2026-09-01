@@ -68,7 +68,7 @@ CLASS zcl_hr360_issue_test IMPLEMENTATION.
     td_basic = VALUE #( BASE td_basic
       ( employeeid = iv_pernr lastname = 'Doe' firstname = 'Jane'
         dateofbirth = '19900101' gender = 'F' nationality = 'US'
-        costcenter = '0000001000' position = '99999999'
+        costcenter = '0000001000' positionid = '99999999'
         orgunit = '50000001' companycode = '1000' employmentstatus = '3' ) ).
     td_pay     = VALUE #( BASE td_pay     ( employeeid = iv_pernr trfgr = 'A1' ) ).
     td_contact = VALUE #( BASE td_contact ( employeeid = iv_pernr emailaddress = 'jane.doe@corp.com' country = 'US' ) ).

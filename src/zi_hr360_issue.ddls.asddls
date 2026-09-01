@@ -65,7 +65,7 @@ union all
       cast( 'Position is not assigned' as abap.char( 60 ) ) as IssueDescription,
       cast( 'Position' as abap.char( 30 ) )      as FieldName
 }
-where Emp.Position is initial
+where Emp.PositionId is initial
 
 union all
   select from ZI_HR360_EMP_BASIC as Emp
