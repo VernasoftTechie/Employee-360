@@ -89,3 +89,12 @@
 - [ ] Test employee has valid PA0001/PA0002 slices on the key date?
 - [ ] `P_ORGIN` display authorization present for the test user?
 - [ ] SLG1 under object `ZHR360` for report run logs.
+
+## #007 - Metadata extensions deferred
+
+The 12 `ZC_HR360_*_MDE` metadata extensions were removed in v0.8: the abapGit
+DDLX metadata files failed to import ("description is missing"), which poisoned
+the whole "Activate All Inactive" run. UI annotations will be re-added directly
+in SAP Business Application Studio when the Fiori app is generated (or as
+hand-written `.ddlx` created in ADT). The projections keep
+`@Metadata.allowExtensions: true` so nothing else changes.

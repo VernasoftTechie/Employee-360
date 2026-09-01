@@ -1,4 +1,4 @@
-unmanaged implementation in class zbp_hr360_orgassign unique;
+unmanaged;
 strict ( 2 );
 
 define behavior for ZI_HR360_ORGASSIGN alias OrgAssignment

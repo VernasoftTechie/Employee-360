@@ -1,4 +1,4 @@
-unmanaged implementation in class zbp_hr360_employee unique;
+unmanaged;
 strict ( 2 );
 
 // Read-only BO. No create / update / delete on any entity.
