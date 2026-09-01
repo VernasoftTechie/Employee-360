@@ -65,10 +65,8 @@ CLASS lcl_app IMPLEMENTATION.
         lo_sorts->add_sort( columnname = 'CATEGORY'  subtotal = abap_true ).
         lo_alv->get_display_settings( )->set_list_header( 'HR Employee 360 - Missing Data Validation' ).
         lo_alv->display( ).
-      CATCH cx_salv_msg INTO DATA(lx).
+      CATCH cx_salv_error INTO DATA(lx).
         MESSAGE lx->get_text( ) TYPE 'E'.
-      CATCH cx_salv_data_error INTO DATA(lx2).
-        MESSAGE lx2->get_text( ) TYPE 'E'.
     ENDTRY.
   ENDMETHOD.
 

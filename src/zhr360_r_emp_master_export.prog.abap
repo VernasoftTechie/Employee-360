@@ -95,7 +95,7 @@ CLASS lcl_app IMPLEMENTATION.
         lo_alv->get_columns( )->set_optimize( ).
         lo_alv->get_display_settings( )->set_list_header( 'HR Employee 360 - Master Export' ).
         lo_alv->display( ).
-      CATCH cx_salv_msg INTO DATA(lx).
+      CATCH cx_salv_error INTO DATA(lx).
         MESSAGE lx->get_text( ) TYPE 'E'.
     ENDTRY.
   ENDMETHOD.
@@ -137,7 +137,7 @@ CLASS lcl_app IMPLEMENTATION.
         log->add_item( cl_bali_free_text_setter=>create(
           severity = if_bali_constants=>c_severity_status
           text     = CONV #( |{ iv_rows } rows exported| ) ) ).
-        cl_bali_log_db=>get_instance( )->save_log_to_db( log ).
+        cl_bali_log_db=>get_instance( )->save_log( log ).
       CATCH cx_bali_runtime.
         " logging must never break the report
     ENDTRY.

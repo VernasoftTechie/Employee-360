@@ -61,7 +61,7 @@ CLASS lcl_app IMPLEMENTATION.
         lo_alv->get_columns( )->set_optimize( ).
         lo_alv->get_display_settings( )->set_list_header( 'HR Employee 360 - HR Audit (detail)' ).
         lo_alv->display( ).
-      CATCH cx_salv_msg INTO DATA(lx).
+      CATCH cx_salv_error INTO DATA(lx).
         MESSAGE lx->get_text( ) TYPE 'E'.
     ENDTRY.
   ENDMETHOD.
