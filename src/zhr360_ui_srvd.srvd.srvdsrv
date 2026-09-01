@@ -2,5 +2,6 @@
 define service ZHR360_UI_SRVD {
   expose ZC_HR360_EMPLOYEE     as Employee;
   expose ZC_HR360_ISSUE        as DataQualityIssue;
+  expose ZC_HR360_EDUCATION    as Education;
   expose ZC_HR360_KPI_OVERVIEW as KpiOverview;
 }

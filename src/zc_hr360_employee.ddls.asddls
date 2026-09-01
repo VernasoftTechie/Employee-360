@@ -1,5 +1,4 @@
-// TEMP v0.18 diagnostic - restore to #CHECK once data is confirmed
-@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'HR360 - Employee (query)'
 @Metadata.allowExtensions: true
 @Search.searchable: true
@@ -16,7 +15,16 @@
 
 define view entity ZC_HR360_EMPLOYEE
   as select from ZI_HR360_EMPLOYEE
+
+  association [0..*] to ZC_HR360_EDUCATION as _Education
+    on _Education.EmployeeID = $projection.EmployeeID
+
 {
+      @UI.facet: [
+        { id: 'Header',    purpose: #HEADER,   type: #IDENTIFICATION_REFERENCE, label: 'Employee',        position: 10 },
+        { id: 'Education',  purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Education', label: 'Education', position: 20 }
+      ]
+
       @UI.lineItem:      [{ position: 10 }]
       @UI.identification: [{ position: 10 }]
   key EmployeeID,
@@ -103,5 +111,7 @@ define view entity ZC_HR360_EMPLOYEE
 
       @UI.lineItem:      [{ position: 90 }]
       @UI.identification: [{ position: 200 }]
-      CompletenessPercent
+      CompletenessPercent,
+
+      _Education
 }

@@ -1,5 +1,4 @@
-// TEMP v0.18 diagnostic - restore to #CHECK once data is confirmed
-@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'HR360 - Employee (root)'
 @Metadata.ignorePropagatedAnnotations: true
 
