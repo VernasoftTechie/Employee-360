@@ -13,6 +13,6 @@ define view entity ZI_HR360_DOCUMENT
   key L.arc_doc_id as ArchivDocID,
       L.archiv_id  as ArchiveID,
       L.ar_object  as DocumentType,
-      L.ar_date    as ArchiveDate
+      cast( L.ar_date as abap.dats ) as ArchiveDate
 }
 where L.sap_object = 'PREL'

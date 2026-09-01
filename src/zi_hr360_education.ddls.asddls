@@ -7,10 +7,10 @@ define view entity ZI_HR360_EDUCATION
 {
   key E.pernr as EmployeeID,
   key E.subty as EducationType,
-  key E.begda as ValidFrom,
+  key cast( E.begda as abap.dats ) as ValidFrom,
       E.seqnr as EducationSeqNr,
       E.slart as EducationCategory,
       E.slabs as Establishment,
       E.insti as InstituteName,
-      E.endda as ValidTo
+      cast( E.endda as abap.dats ) as ValidTo
 }

@@ -39,6 +39,10 @@ commit, re-activating each time. Slower per feature, far fewer dead rounds.
 | A21 | 🔴 Report: `"CONV BAL_S_EXTN( )" is not type-compatible with formal parameter "EXTERNAL_ID"` | `cl_bali_header_setter=>create( external_id = CONV bal_s_extn( … ) )` — `external_id` is not `BAL_S_EXTN`. | Dropped the `external_id` argument (optional); keep object/subobject only. | v0.14 |
 | A22 | 🔴 Report: `Method "SAVE_LOG_TO_DB" does not exist. There is, however, a method with the similar name "SAVE_LOG"` | `cl_bali_log_db=>get_instance( )->save_log_to_db( )` — the method is `save_log( )`. | Renamed the call. | v0.15 |
 | A23 | 🟡 Report: `The exception CX_SALV_EXISTING is not caught or declared in the RAISING clause` | `cl_salv_sorts->add_sort( )` raises `CX_SALV_EXISTING` / `CX_SALV_NOT_FOUND` on top of `CX_SALV_DATA_ERROR`; only the last was caught. | One `CATCH cx_salv_error` (the common superclass of every `cx_salv_*`) instead of narrow catches. | v0.15 |
+| A24 | 🔴 **Fiori preview**: "Application could not be started due to technical issues — Do not use conversion ext PDATE here." | The **runtime** (not activation) error. A PA-infotype date field carries data element `BEGDA`/`ENDDA` whose domain has **conversion exit `PDATE`**; the OData V4 / Fiori Elements runtime cannot render a field with that conversion routine. Affected every date sourced from `BEGDA`/`ENDDA` (and `GBDAT` for birth date). | `cast( <field> as abap.dats )` on **every** infotype date element in the CDS — strips the data element + conversion exit, leaving a plain `DATS`. Same for time fields → `cast( … as abap.tims )`. | v0.16 |
+
+**Rule:** never expose a raw PA-infotype `BEGDA`/`ENDDA`/`GBDAT`/`DESTA`/`DEEND`/…
+date to OData. Always `cast( x as abap.dats )`. Times → `cast( x as abap.tims )`.
 
 **⚠ Self-note:** before every "column unknown / reserved / reference" conclusion,
 check this table first. STAT2 (A11) was flagged in an earlier screenshot and I

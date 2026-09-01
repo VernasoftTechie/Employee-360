@@ -9,8 +9,8 @@ define view entity ZI_HR360_PAYROLL
   as select from pa0008 as B
 {
   key B.pernr as EmployeeID,
-  key B.begda as ValidFrom,
-      B.endda as ValidTo,
+  key cast( B.begda as abap.dats ) as ValidFrom,
+      cast( B.endda as abap.dats ) as ValidTo,
       B.trfar as PayScaleType,
       B.trfgb as PayScaleArea,
       B.trfgr as PayScaleGroup,

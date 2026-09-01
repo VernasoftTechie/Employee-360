@@ -24,7 +24,7 @@ define view entity ZI_HR360_EMP_BASIC
       O.stell as Job,
       P.nachn as LastName,
       P.vorna as FirstName,
-      P.gbdat as DateOfBirth,
+      cast( P.gbdat as abap.dats ) as DateOfBirth,
       P.gesch as Gender,
       P.natio as Nationality
 }

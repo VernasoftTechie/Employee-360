@@ -7,8 +7,8 @@ define view entity ZI_HR360_LEAVE
 {
   key Q.pernr as EmployeeID,
   key Q.ktart as QuotaType,
-  key Q.desta as DeductionFrom,
-      Q.deend as DeductionTo,
+  key cast( Q.desta as abap.dats ) as DeductionFrom,
+      cast( Q.deend as abap.dats ) as DeductionTo,
       cast( Q.anzhl as abap.dec( 13, 2 ) )              as Entitlement,
       cast( Q.kverb as abap.dec( 13, 2 ) )              as Deducted,
       cast( Q.anzhl - Q.kverb as abap.dec( 13, 2 ) )    as Remaining
