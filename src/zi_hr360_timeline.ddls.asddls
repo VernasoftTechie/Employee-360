@@ -10,8 +10,8 @@ define view entity ZI_HR360_TIMELINE
 {
   key Act.pernr                               as EmployeeID,
   key Act.begda                               as EventDate,
-  key cast( 'ACTION' as abap.char( 12 ) )     as EventCategory,
-  key cast( Act.massn as abap.char( 12 ) )    as EventKey,
+  key cast( 'ACTION' as abap.char( 20 ) )     as EventCategory,
+  key cast( Act.massn as abap.char( 20 ) )    as EventKey,
       cast( 'Personnel action' as abap.char( 120 ) ) as Title
 }
 
@@ -20,8 +20,8 @@ union all
 {
   key O.pernr                                 as EmployeeID,
   key O.begda                                 as EventDate,
-  key cast( 'ORG_CHANGE' as abap.char( 12 ) ) as EventCategory,
-  key cast( O.orgeh as abap.char( 12 ) )      as EventKey,
+  key cast( 'ORG_CHANGE' as abap.char( 20 ) ) as EventCategory,
+  key cast( O.orgeh as abap.char( 20 ) )      as EventKey,
       cast( concat( 'Org unit ', O.orgeh ) as abap.char( 120 ) ) as Title
 }
 
@@ -30,8 +30,8 @@ union all
 {
   key B.pernr                                 as EmployeeID,
   key B.begda                                 as EventDate,
-  key cast( 'PAY_CHANGE' as abap.char( 12 ) ) as EventCategory,
-  key cast( B.trfst as abap.char( 12 ) )      as EventKey,
+  key cast( 'PAY_CHANGE' as abap.char( 20 ) ) as EventCategory,
+  key cast( B.trfst as abap.char( 20 ) )      as EventKey,
       cast( 'Basic pay changed' as abap.char( 120 ) ) as Title
 }
 
@@ -40,8 +40,8 @@ union all
 {
   key E.pernr                                 as EmployeeID,
   key E.begda                                 as EventDate,
-  key cast( 'EDUCATION' as abap.char( 12 ) )  as EventCategory,
-  key cast( E.slart as abap.char( 12 ) )      as EventKey,
+  key cast( 'EDUCATION' as abap.char( 20 ) )  as EventCategory,
+  key cast( E.slart as abap.char( 20 ) )      as EventKey,
       cast( concat( 'Education ', E.slart ) as abap.char( 120 ) ) as Title
 }
 
@@ -50,8 +50,8 @@ union all
 {
   key Q.pernr                                     as EmployeeID,
   key Q.begda                                     as EventDate,
-  key cast( 'QUALIFICATION' as abap.char( 12 ) )  as EventCategory,
-  key cast( Q.quali as abap.char( 12 ) )          as EventKey,
+  key cast( 'QUALIFICATION' as abap.char( 20 ) )  as EventCategory,
+  key cast( Q.quali as abap.char( 20 ) )          as EventKey,
       cast( concat( 'Qualification ', Q.quali ) as abap.char( 120 ) ) as Title
 }
 
@@ -60,7 +60,7 @@ union all
 {
   key Ab.pernr                                as EmployeeID,
   key Ab.begda                                as EventDate,
-  key cast( 'ABSENCE' as abap.char( 12 ) )    as EventCategory,
-  key cast( Ab.awart as abap.char( 12 ) )     as EventKey,
+  key cast( 'ABSENCE' as abap.char( 20 ) )    as EventCategory,
+  key cast( Ab.awart as abap.char( 20 ) )     as EventKey,
       cast( concat( 'Absence ', Ab.awart ) as abap.char( 120 ) ) as Title
 }
