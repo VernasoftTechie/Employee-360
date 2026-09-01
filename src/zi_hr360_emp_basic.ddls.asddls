@@ -2,7 +2,6 @@
 @EndUserText.label: 'HR360 - Employee Basic (anchor)'
 @Metadata.ignorePropagatedAnnotations: true
 @VDM.viewType: #COMPOSITE
-@ObjectModel.usageType: { serviceQuality: #C, sizeCategory: #L, dataClass: #MIXED }
 
 define view entity ZI_HR360_EMP_BASIC
   as select from pa0001 as OrgAssignment
@@ -18,10 +17,6 @@ define view entity ZI_HR360_EMP_BASIC
                                             and OrgUnitTxt.orgeh = OrgAssignment.orgeh
                                             and OrgUnitTxt.begda <= $session.system_date
                                             and OrgUnitTxt.endda >= $session.system_date
-
-  where OrgAssignment.begda <= $session.system_date
-    and OrgAssignment.endda >= $session.system_date
-
 {
   key OrgAssignment.pernr    as EmployeeID,
 
@@ -46,3 +41,5 @@ define view entity ZI_HR360_EMP_BASIC
       PersonalData.gesch     as Gender,
       PersonalData.natio     as Nationality
 }
+where OrgAssignment.begda <= $session.system_date
+  and OrgAssignment.endda >= $session.system_date

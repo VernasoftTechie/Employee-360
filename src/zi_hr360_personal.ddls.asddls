@@ -31,10 +31,6 @@ define view entity ZI_HR360_PERSONAL
 
   association to parent ZI_HR360_EMPLOYEE as _Employee
     on $projection.EmployeeID = _Employee.EmployeeID
-
-  where P.begda <= $session.system_date
-    and P.endda >= $session.system_date
-
 {
   key P.pernr                                as EmployeeID,
       P.vorna                                as FirstName,
@@ -61,3 +57,5 @@ define view entity ZI_HR360_PERSONAL
 
       _Employee
 }
+where P.begda <= $session.system_date
+  and P.endda >= $session.system_date

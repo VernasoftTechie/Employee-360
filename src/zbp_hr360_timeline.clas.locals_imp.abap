@@ -12,7 +12,7 @@ CLASS lhc_timeline IMPLEMENTATION.
       WHERE employeeid    = @keys-EmployeeID
         AND eventdate     = @keys-EventDate
         AND eventcategory = @keys-EventCategory
-        AND eventseqnr    = @keys-EventSeqNr
+        AND eventkey      = @keys-EventKey
       INTO CORRESPONDING FIELDS OF TABLE @result.
   ENDMETHOD.
 ENDCLASS.

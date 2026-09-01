@@ -2,12 +2,11 @@
 @EndUserText.label: 'HR360 - Employee (root)'
 @Metadata.ignorePropagatedAnnotations: true
 @VDM.viewType: #CONSUMPTION
-@ObjectModel.usageType: { serviceQuality: #C, sizeCategory: #L, dataClass: #MIXED }
 
 define root view entity ZI_HR360_EMPLOYEE
   as select from ZI_HR360_EMP_BASIC as Emp
 
-    left outer join ZI_HR360_ISSUE    as Iss on Iss.EmployeeID = Emp.EmployeeID
+    left outer join ZI_HR360_EMP_KPI  as Kpi on Kpi.EmployeeID = Emp.EmployeeID
     left outer join ZI_HR360_MANAGER  as Mgr on Mgr.EmployeeID = Emp.EmployeeID
     left outer join ZI_HR360_HIREDATE as Hd  on Hd.EmployeeID  = Emp.EmployeeID
 
@@ -51,22 +50,11 @@ define root view entity ZI_HR360_EMPLOYEE
       Mgr.ManagerID                                        as ManagerID,
       Mgr.ManagerName                                      as ManagerName,
 
-      // ---- data-quality KPIs (aggregated on the database, HR_DataQuality PoC pattern) ----
-      count( distinct Iss.CheckID )                                                        as TotalIssueCount,
-      count( distinct case when Iss.Severity = 'C' then Iss.CheckID end )                  as CriticalIssueCount,
-      count( distinct case when Iss.Severity = 'W' then Iss.CheckID end )                  as WarningIssueCount,
-
-      case
-        when count( distinct Iss.CheckID ) = 0
-          then cast( 'OK' as abap.char( 8 ) )
-        when count( distinct case when Iss.Severity = 'C' then Iss.CheckID end ) > 0
-          then cast( 'CRITICAL' as abap.char( 8 ) )
-        else cast( 'WARNING' as abap.char( 8 ) )
-      end                                                                                 as QualityStatus,
-
-      // Denominator 12 = active branch count of ZI_HR360_ISSUE. Keep in sync when
-      // branches are added/removed (single point, flagged - PoC discipline).
-      cast( 100 - ( count( distinct Iss.CheckID ) * 100 / 12 ) as abap.dec( 5, 1 ) )      as CompletenessPercent,
+      coalesce( Kpi.TotalIssueCount,    0 )                as TotalIssueCount,
+      coalesce( Kpi.CriticalIssueCount, 0 )                as CriticalIssueCount,
+      coalesce( Kpi.WarningIssueCount,  0 )                as WarningIssueCount,
+      coalesce( Kpi.QualityStatus, cast( 'OK' as abap.char( 8 ) ) )                 as QualityStatus,
+      coalesce( Kpi.CompletenessPercent, cast( '100.0' as abap.dec( 5, 1 ) ) )      as CompletenessPercent,
 
       _Personal,
       _OrgAssignment,
@@ -81,26 +69,3 @@ define root view entity ZI_HR360_EMPLOYEE
       _Manager,
       _DirectReport
 }
-group by
-  Emp.EmployeeID,
-  Emp.LastName,
-  Emp.FirstName,
-  Emp.DateOfBirth,
-  Emp.Gender,
-  Emp.Nationality,
-  Emp.EmploymentStatus,
-  Hd.HireDate,
-  Emp.CompanyCode,
-  Emp.PersonnelArea,
-  Emp.PersonnelAreaName,
-  Emp.PersonnelSubarea,
-  Emp.EmployeeGroup,
-  Emp.EmployeeGroupName,
-  Emp.EmployeeSubgroup,
-  Emp.EmployeeSubgroupName,
-  Emp.OrgUnit,
-  Emp.OrgUnitName,
-  Emp.Position,
-  Emp.CostCenter,
-  Mgr.ManagerID,
-  Mgr.ManagerName

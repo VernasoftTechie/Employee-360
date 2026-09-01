@@ -1,14 +1,14 @@
 @Metadata.layer: #CORE
 @UI: {
   headerInfo: { typeName: 'Event', typeNamePlural: 'Timeline' },
-  presentationVariant: [{ sortOrder: [{ by: 'SortDate', direction: #DESC }] }]
+  presentationVariant: [{ sortOrder: [{ by: 'EventDate', direction: #DESC }] }]
 }
 annotate entity ZC_HR360_TIMELINE with
 {
   @UI.hidden: true
   EmployeeID;
   @UI.hidden: true
-  SortDate;
+  EventKey;
   @UI.lineItem: [{ position: 10 }]
   EventDate;
   @UI.lineItem: [{ position: 20 }]

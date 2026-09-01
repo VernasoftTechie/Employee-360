@@ -8,9 +8,7 @@ define view entity ZC_HR360_TIMELINE
   key EmployeeID,
   key EventDate,
   key EventCategory,
-  key EventSeqNr,
-      EventType,
+  key EventKey,
       Title,
-      Detail,
-      SortDate
+      Detail
 }

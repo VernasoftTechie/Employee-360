@@ -24,13 +24,13 @@
      <SPRSL>E</SPRSL>
      <ARBGB>ZMSG_HR360</ARBGB>
      <MSGNR>003</MSGNR>
-     <TEXT>&1 employees selected, &2 with data-quality issues</TEXT>
+     <TEXT>&amp;1 employees selected, &amp;2 with data-quality issues</TEXT>
     </item>
     <item>
      <SPRSL>E</SPRSL>
      <ARBGB>ZMSG_HR360</ARBGB>
      <MSGNR>004</MSGNR>
-     <TEXT>Output file &1 written on the application server</TEXT>
+     <TEXT>Output file &amp;1 written on the application server</TEXT>
     </item>
     <item>
      <SPRSL>E</SPRSL>
@@ -42,19 +42,19 @@
      <SPRSL>E</SPRSL>
      <ARBGB>ZMSG_HR360</ARBGB>
      <MSGNR>006</MSGNR>
-     <TEXT>Could not open file &1 for output (&2)</TEXT>
+     <TEXT>Could not open file &amp;1 for output (&amp;2)</TEXT>
     </item>
     <item>
      <SPRSL>E</SPRSL>
      <ARBGB>ZMSG_HR360</ARBGB>
      <MSGNR>007</MSGNR>
-     <TEXT>Report run &1 completed: &2 rows</TEXT>
+     <TEXT>Report run &amp;1 completed: &amp;2 rows</TEXT>
     </item>
     <item>
      <SPRSL>E</SPRSL>
      <ARBGB>ZMSG_HR360</ARBGB>
      <MSGNR>008</MSGNR>
-     <TEXT>Organizational hierarchy could not be resolved for &1</TEXT>
+     <TEXT>Organizational hierarchy could not be resolved for &amp;1</TEXT>
     </item>
    </T100>
   </asx:values>

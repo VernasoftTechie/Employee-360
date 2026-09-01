@@ -1,4 +1,4 @@
-@AccessControl.authorizationCheck: #NOT_REQUIRED  // building block - row filter inherited from consuming #CHECK views
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Employee Contact and Address'
 @Metadata.ignorePropagatedAnnotations: true
 @VDM.viewType: #BASIC
@@ -20,10 +20,6 @@ define view entity ZI_HR360_EMP_CONTACT
                                       and Address.subty = '1'
                                       and Address.begda <= $session.system_date
                                       and Address.endda >= $session.system_date
-
-  where PersonalData.begda <= $session.system_date
-    and PersonalData.endda >= $session.system_date
-
 {
   key PersonalData.pernr    as EmployeeID,
       Email.usrid_long      as EmailAddress,
@@ -34,3 +30,5 @@ define view entity ZI_HR360_EMP_CONTACT
       Address.state         as Region,
       Address.land1         as Country
 }
+where PersonalData.begda <= $session.system_date
+  and PersonalData.endda >= $session.system_date

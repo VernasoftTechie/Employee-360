@@ -258,7 +258,7 @@ CLASS lhc_employee IMPLEMENTATION.
         target-%tky-EmployeeID    = r-employeeid
         target-%tky-EventDate     = r-eventdate
         target-%tky-EventCategory = r-eventcategory
-        target-%tky-EventSeqNr    = r-eventseqnr ) ).
+        target-%tky-EventKey      = r-eventkey ) ).
     IF result_requested = abap_true.
       result = CORRESPONDING #( rows ).
     ENDIF.

@@ -27,10 +27,6 @@ define view entity ZI_HR360_ORGASSIGN
 
   association to parent ZI_HR360_EMPLOYEE as _Employee
     on $projection.EmployeeID = _Employee.EmployeeID
-
-  where O.begda <= $session.system_date
-    and O.endda >= $session.system_date
-
 {
   key O.pernr              as EmployeeID,
       O.bukrs              as CompanyCode,
@@ -53,3 +49,5 @@ define view entity ZI_HR360_ORGASSIGN
 
       _Employee
 }
+where O.begda <= $session.system_date
+  and O.endda >= $session.system_date

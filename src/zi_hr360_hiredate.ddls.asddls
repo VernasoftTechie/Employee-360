@@ -3,18 +3,14 @@
 @Metadata.ignorePropagatedAnnotations: true
 @VDM.viewType: #BASIC
 
-// Earliest action start date for a hiring-type action.
-// Hiring action codes are client customizing (T529A). '01' is the SAP default
-// "Hiring"; extend the IN list if the client uses additional hiring actions.
+// Earliest start date of a hiring-type personnel action. '01' is the SAP
+// default hiring action (T529A); adjust the predicate to the client's set.
 
 define view entity ZI_HR360_HIREDATE
   as select from pa0000
-
-  where massn in ( '01' )
-
 {
   key pernr        as EmployeeID,
       min( begda ) as HireDate
 }
-group by
-  pernr
+where massn = '01'
+group by pernr

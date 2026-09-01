@@ -7,13 +7,16 @@
 *&---------------------------------------------------------------------*
 REPORT zhr360_r_missing_data.
 
-TABLES: pa0001.
+DATA: gv_pernr TYPE pernr_d,
+      gv_bukrs TYPE bukrs,
+      gv_werks TYPE persa,
+      gv_orgeh TYPE orgeh.
 
 SELECT-OPTIONS:
-  s_pernr FOR pa0001-pernr,
-  s_bukrs FOR pa0001-bukrs,
-  s_werks FOR pa0001-werks,
-  s_orgeh FOR pa0001-orgeh.
+  s_pernr FOR gv_pernr,
+  s_bukrs FOR gv_bukrs,
+  s_werks FOR gv_werks,
+  s_orgeh FOR gv_orgeh.
 
 PARAMETERS:
   p_keydt TYPE datum DEFAULT sy-datum.
