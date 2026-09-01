@@ -1,0 +1,21 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName: 'Pay Record', typeNamePlural: 'Pay History' } }
+annotate entity ZC_HR360_PAYROLL with
+{
+  @UI.hidden: true
+  EmployeeID;
+  @UI.lineItem: [{ position: 10 }]
+  ValidFrom;
+  @UI.lineItem: [{ position: 20 }]
+  ValidTo;
+  @UI.lineItem: [{ position: 30 }]
+  PayScaleGroup;
+  @UI.lineItem: [{ position: 40 }]
+  PayScaleLevel;
+  @UI.lineItem: [{ position: 50 }]
+  AnnualSalary;
+  @UI.lineItem: [{ position: 60 }]
+  Currency;
+  @UI.lineItem: [{ position: 70 }]
+  PayChangeReasonName;
+}

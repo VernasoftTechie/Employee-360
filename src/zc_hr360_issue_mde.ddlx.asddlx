@@ -1,0 +1,17 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName: 'Issue', typeNamePlural: 'Data Quality Issues' } }
+annotate entity ZC_HR360_ISSUE with
+{
+  @UI.hidden: true
+  EmployeeID;
+  @UI.lineItem: [{ position: 10 }]
+  Category;
+  @UI.lineItem: [{ position: 20, criticality: 'SeverityCriticality' }]
+  Severity;
+  @UI.hidden: true
+  SeverityCriticality;
+  @UI.lineItem: [{ position: 30 }]
+  IssueDescription;
+  @UI.lineItem: [{ position: 40 }]
+  FieldName;
+}

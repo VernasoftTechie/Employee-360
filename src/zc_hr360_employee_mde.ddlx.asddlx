@@ -1,0 +1,106 @@
+@Metadata.layer: #CORE
+
+@UI: {
+  headerInfo: {
+    typeName: 'Employee',
+    typeNamePlural: 'Employees',
+    title: { type: #STANDARD, value: 'FormattedName' },
+    description: { type: #STANDARD, value: 'EmployeeID' }
+  }
+}
+annotate entity ZC_HR360_EMPLOYEE with
+{
+  @UI.facet: [
+    { id: 'Header',   purpose: #HEADER, type: #DATAPOINT_REFERENCE, targetQualifier: 'Completeness', position: 10 },
+    { id: 'HdrIssue', purpose: #HEADER, type: #DATAPOINT_REFERENCE, targetQualifier: 'Issues',       position: 20 },
+
+    { id: 'Personal',      purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, targetElement: '_Personal',      label: 'Personal Details',      position: 10 },
+    { id: 'Organization',  purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, targetElement: '_OrgAssignment', label: 'Organization & Position', position: 20 },
+    { id: 'Education',     purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_Education',     label: 'Education',             position: 30 },
+    { id: 'Skills',        purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_Qualification', label: 'Skills & Certifications', position: 40 },
+    { id: 'Leave',         purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_LeaveBalance',  label: 'Leave & Quotas',       position: 50 },
+    { id: 'Attendance',    purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_Attendance',    label: 'Attendance',           position: 60 },
+    { id: 'Payroll',       purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_Payroll',       label: 'Pay History',          position: 70 },
+    { id: 'Documents',     purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_Document',      label: 'Documents',            position: 80 },
+    { id: 'Timeline',      purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_Timeline',      label: 'Timeline',             position: 90 },
+    { id: 'DataQuality',   purpose: #STANDARD, type: #LINEITEM_REFERENCE,       targetElement: '_DataQuality',   label: 'Data Quality Issues',  position: 100 }
+  ]
+
+  @UI.lineItem:      [{ position: 10 }]
+  @UI.selectionField: [{ position: 10 }]
+  EmployeeID;
+
+  @UI.lineItem:      [{ position: 20 }]
+  @UI.identification: [{ position: 10 }]
+  FormattedName;
+
+  @UI.hidden: true
+  FirstName;
+  @UI.hidden: true
+  LastName;
+
+  @UI.identification: [{ position: 20 }]
+  DateOfBirth;
+  @UI.identification: [{ position: 30 }]
+  Gender;
+  @UI.identification: [{ position: 40 }]
+  Nationality;
+  @UI.identification: [{ position: 50 }]
+  HireDate;
+
+  @UI.lineItem:      [{ position: 30 }]
+  @UI.selectionField: [{ position: 20 }]
+  @UI.identification: [{ position: 60 }]
+  CompanyCode;
+
+  @UI.lineItem:      [{ position: 40 }]
+  @UI.selectionField: [{ position: 30 }]
+  @UI.identification: [{ position: 70 }]
+  PersonnelArea;
+  PersonnelAreaName;
+
+  @UI.selectionField: [{ position: 40 }]
+  @UI.identification: [{ position: 80 }]
+  EmployeeGroup;
+  EmployeeGroupName;
+
+  @UI.lineItem:      [{ position: 50 }]
+  @UI.selectionField: [{ position: 50 }]
+  @UI.identification: [{ position: 90 }]
+  OrgUnit;
+  @UI.identification: [{ position: 95 }]
+  OrgUnitName;
+
+  @UI.identification: [{ position: 100 }]
+  Position;
+  @UI.identification: [{ position: 110 }]
+  CostCenter;
+  @UI.identification: [{ position: 120 }]
+  ManagerName;
+
+  @UI.selectionField: [{ position: 60 }]
+  EmploymentStatus;
+
+  @UI.lineItem:      [{ position: 60 }]
+  @UI.identification: [{ position: 130 }]
+  TotalIssueCount;
+
+  @UI.lineItem:      [{ position: 70 }]
+  @UI.dataPoint: { title: 'Open Issues', qualifier: 'Issues', criticality: 'QualityStatusCriticality' }
+  CriticalIssueCount;
+
+  @UI.lineItem: [{ position: 80 }]
+  WarningIssueCount;
+
+  @UI.lineItem:      [{ position: 90, criticality: 'QualityStatusCriticality' }]
+  @UI.selectionField: [{ position: 70 }]
+  @UI.identification: [{ position: 140, criticality: 'QualityStatusCriticality' }]
+  QualityStatus;
+
+  @UI.hidden: true
+  QualityStatusCriticality;
+
+  @UI.lineItem:  [{ position: 100 }]
+  @UI.dataPoint: { title: 'Data Completeness', qualifier: 'Completeness', targetValue: 100, criticality: 'QualityStatusCriticality', visualization: #PROGRESS }
+  CompletenessPercent;
+}

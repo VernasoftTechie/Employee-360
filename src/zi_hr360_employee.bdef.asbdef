@@ -1,0 +1,60 @@
+unmanaged;
+strict ( 2 );
+
+define behavior for ZI_HR360_EMPLOYEE alias Employee
+authorization master ( instance )
+{
+  // read-only BO: no create / update / delete on any entity
+  association _Personal      { }
+  association _OrgAssignment  { }
+  association _Education      { }
+  association _Qualification  { }
+  association _LeaveBalance   { }
+  association _Attendance     { }
+  association _Payroll        { }
+  association _Document       { }
+  association _Timeline       { }
+  association _DataQuality    { }
+  association _Manager        { }
+  association _DirectReport   { }
+}
+
+define behavior for ZI_HR360_PERSONAL alias Personal
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_ORGASSIGN alias OrgAssignment
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_EDUCATION alias Education
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_QUALIF alias Qualification
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_LEAVE alias LeaveBalance
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_ATTENDANCE alias Attendance
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_PAYROLL alias PayrollItem
+{
+  association _Employee { }
+}
+
+define behavior for ZI_HR360_DOCUMENT alias Document
+{
+  association _Employee { }
+}

@@ -1,0 +1,10 @@
+@EndUserText.label: 'HR360 - Employee display authorization (P_ORGIN)'
+@MappingRole: true
+define role ZI_HR360_EMP_BASIC_DCL {
+  grant select on ZI_HR360_EMP_BASIC
+    where ( PersonnelArea, EmployeeGroup, EmployeeSubgroup ) =
+      aspect pfcg_auth ( P_ORGIN,
+                         PERSA, PERSG, PERSK,
+                         INFTY = '0001',
+                         AUTHC = 'R' );
+}

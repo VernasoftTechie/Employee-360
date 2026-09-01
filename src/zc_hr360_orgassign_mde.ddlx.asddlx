@@ -1,0 +1,29 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName: 'Organization', typeNamePlural: 'Organization' } }
+annotate entity ZC_HR360_ORGASSIGN with
+{
+  @UI.hidden: true
+  EmployeeID;
+  @UI.identification: [{ position: 10 }]
+  CompanyCode;
+  @UI.identification: [{ position: 20 }]
+  PersonnelAreaName;
+  @UI.identification: [{ position: 30 }]
+  EmployeeGroupName;
+  @UI.identification: [{ position: 40 }]
+  EmployeeSubgroupName;
+  @UI.identification: [{ position: 50 }]
+  OrgUnit;
+  @UI.identification: [{ position: 60 }]
+  OrgUnitName;
+  @UI.identification: [{ position: 70 }]
+  Position;
+  @UI.identification: [{ position: 80 }]
+  PositionName;
+  @UI.identification: [{ position: 90 }]
+  JobName;
+  @UI.identification: [{ position: 100 }]
+  CostCenter;
+  @UI.identification: [{ position: 110 }]
+  ManagerName;
+}

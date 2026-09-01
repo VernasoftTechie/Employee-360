@@ -1,0 +1,6 @@
+@EndUserText.label: 'HR360 - DOCUMENT authorization'
+@MappingRole: true
+define role ZI_HR360_DOCUMENT_DCL {
+  grant select on ZI_HR360_DOCUMENT
+    where inheriting conditions from entity ZI_HR360_EMPLOYEE;
+}

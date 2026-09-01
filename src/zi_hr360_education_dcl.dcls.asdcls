@@ -1,0 +1,6 @@
+@EndUserText.label: 'HR360 - EDUCATION authorization'
+@MappingRole: true
+define role ZI_HR360_EDUCATION_DCL {
+  grant select on ZI_HR360_EDUCATION
+    where inheriting conditions from entity ZI_HR360_EMPLOYEE;
+}

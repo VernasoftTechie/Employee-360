@@ -1,0 +1,19 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName: 'Education Record', typeNamePlural: 'Education' } }
+annotate entity ZC_HR360_EDUCATION with
+{
+  @UI.hidden: true
+  EmployeeID;
+  @UI.lineItem: [{ position: 10 }]
+  EducationTypeName;
+  @UI.lineItem: [{ position: 20 }]
+  InstituteName;
+  @UI.lineItem: [{ position: 30 }]
+  CertificateName;
+  @UI.lineItem: [{ position: 40 }]
+  Discipline;
+  @UI.lineItem: [{ position: 50 }]
+  ValidFrom;
+  @UI.lineItem: [{ position: 60 }]
+  ValidTo;
+}

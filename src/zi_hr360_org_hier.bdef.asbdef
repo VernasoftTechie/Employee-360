@@ -1,0 +1,6 @@
+unmanaged;
+strict ( 2 );
+
+define behavior for ZI_HR360_ORG_HIER alias OrgNode
+{
+}

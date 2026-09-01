@@ -1,0 +1,10 @@
+@EndUserText.label: 'HR360 - Organization display authorization (P_ORGIN)'
+@MappingRole: true
+define role ZI_HR360_ORGASSIGN_DCL {
+  grant select on ZI_HR360_ORGASSIGN
+    where ( PersonnelArea, EmployeeGroup, EmployeeSubgroup ) =
+      aspect pfcg_auth ( P_ORGIN,
+                         PERSA, PERSG, PERSK,
+                         INFTY = '0001',
+                         AUTHC = 'R' );
+}

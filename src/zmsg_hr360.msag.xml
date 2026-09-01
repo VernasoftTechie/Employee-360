@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZMSG_HR360</ARBGB>
+    <MASTERLANG>E</MASTERLANG>
+    <STEXT>HR Employee 360 messages</STEXT>
+   </T100A>
+   <T100>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>You are not authorized to display HR data</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>No employees found for the selection</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>&1 employees selected, &2 with data-quality issues</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>Output file &1 written on the application server</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Enter an application server file path for file output</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>Could not open file &1 for output (&2)</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>Report run &1 completed: &2 rows</TEXT>
+    </item>
+    <item>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMSG_HR360</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>Organizational hierarchy could not be resolved for &1</TEXT>
+    </item>
+   </T100>
+  </asx:values>
+ </asx:abap>
+</abapGit>

@@ -1,0 +1,26 @@
+@Metadata.layer: #CORE
+annotate entity ZC_HR360_KPI_OVERVIEW with
+{
+  @UI.selectionField: [{ position: 10 }]
+  CompanyCode;
+  @UI.selectionField: [{ position: 20 }]
+  PersonnelArea;
+  @UI.selectionField: [{ position: 30 }]
+  EmployeeGroup;
+  @UI.selectionField: [{ position: 40 }]
+  OrgUnit;
+  @UI.selectionField: [{ position: 50 }]
+  QualityStatus;
+
+  @UI.lineItem: [{ position: 10 }]
+  OrgUnitName;
+  @UI.lineItem: [{ position: 20 }]
+  @UI.dataPoint: { title: 'Avg Completeness %', targetValue: 100 }
+  AvgCompletenessPercent;
+  @UI.lineItem: [{ position: 30 }]
+  EmployeesWithIssues;
+  @UI.lineItem: [{ position: 40 }]
+  CriticalIssueCount;
+  @UI.lineItem: [{ position: 50 }]
+  MissingDataCount;
+}

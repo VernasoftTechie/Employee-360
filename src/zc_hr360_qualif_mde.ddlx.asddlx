@@ -1,0 +1,21 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName: 'Qualification', typeNamePlural: 'Skills and Certifications' } }
+annotate entity ZC_HR360_QUALIF with
+{
+  @UI.hidden: true
+  EmployeeID;
+  @UI.lineItem: [{ position: 10 }]
+  QualificationName;
+  @UI.lineItem: [{ position: 20 }]
+  QualificationGroupName;
+  @UI.lineItem: [{ position: 30 }]
+  QualificationType;
+  @UI.lineItem: [{ position: 40 }]
+  Proficiency;
+  @UI.lineItem: [{ position: 50 }]
+  ValidFrom;
+  @UI.lineItem: [{ position: 60 }]
+  ValidTo;
+  @UI.lineItem: [{ position: 70 }]
+  IsExpired;
+}

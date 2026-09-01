@@ -1,0 +1,27 @@
+projection;
+strict ( 2 );
+
+define behavior for ZC_HR360_EMPLOYEE alias Employee
+{
+  use association _Personal      { }
+  use association _OrgAssignment  { }
+  use association _Education      { }
+  use association _Qualification  { }
+  use association _LeaveBalance   { }
+  use association _Attendance     { }
+  use association _Payroll        { }
+  use association _Document       { }
+  use association _Timeline       { }
+  use association _DataQuality    { }
+  use association _Manager        { }
+  use association _DirectReport   { }
+}
+
+define behavior for ZC_HR360_PERSONAL    alias Personal      { use association _Employee { } }
+define behavior for ZC_HR360_ORGASSIGN   alias OrgAssignment { use association _Employee { } }
+define behavior for ZC_HR360_EDUCATION   alias Education     { use association _Employee { } }
+define behavior for ZC_HR360_QUALIF      alias Qualification { use association _Employee { } }
+define behavior for ZC_HR360_LEAVE       alias LeaveBalance  { use association _Employee { } }
+define behavior for ZC_HR360_ATTENDANCE  alias Attendance    { use association _Employee { } }
+define behavior for ZC_HR360_PAYROLL     alias PayrollItem   { use association _Employee { } }
+define behavior for ZC_HR360_DOCUMENT    alias Document      { use association _Employee { } }
