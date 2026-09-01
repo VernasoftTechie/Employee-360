@@ -1,91 +1,65 @@
 # Employee-360
 
-**HR Employee 360** — a read-only SAP RAP application that assembles a complete
-employee profile (personal, organizational, developmental, time, pay,
-documents, timeline) in one Fiori app, plus an HR data-quality / audit
-reporting layer.
+**HR Employee 360** — a read-only SAP application over standard SAP HCM data:
+an employee profile query service plus an HR data-quality / audit reporting layer.
 
-- Platform: **S/4HANA 2023 On-Premise, Standard ABAP, OData V4**
-- RAP object: **unmanaged, read-only, non-draft**
+- Platform: **S/4HANA On-Premise, Standard ABAP, OData V4**
 - **Standard SAP tables only — zero custom DDIC objects**
-- Data-quality check framework **reused & extended from
-  `HR_DataQuality_RAP_PoC`**
-- Package: **`ZHR_UTIL`** — every object in this repo belongs to this single
-  package. `src/package.devc.xml` carries only the package description; link the
-  repo to `ZHR_UTIL` in the abapGit repo settings on first pull (no sub-packages).
+- Data-quality check framework reused from `HR_DataQuality_RAP_PoC`
+- Package: **`ZHR_UTIL`** — every `/src` object belongs to this one package.
+  Link the repo to `ZHR_UTIL` in the abapGit repo settings on first pull.
 
-Design is fully documented under [`/docs`](docs) (01–13). Nothing here should be
-activated before reading `docs/01_solution_architecture.md`.
+> **Build status:** first green build (v0.15+). See `docs/BUILD_ISSUES_LOG.md`
+> for the full activation-error trail and the current scope. The Fiori app is a
+> read-only OData V4 service (no RAP BO wrapper yet); child facets, UI metadata
+> extensions, org hierarchy and text columns are staged for later increments.
 
 ---
 
 ## Repository layout
 
 ```
-/docs   01..13  functional + technical design (approved before build)
-/src            abapGit source (FOLDER_LOGIC = PREFIX, flat)
-/ui/orgTree     reference files for the freestyle org-navigation section
+/src               abapGit source — ONLY the active, wired objects (FOLDER_LOGIC = PREFIX, flat)
+/staging           work-in-progress objects NOT yet wired in — abapGit ignores this folder
+/docs              functional + technical design + BUILD_ISSUES_LOG.md
 ```
 
-## Pull with abapGit
+## What's in `/src` (the green build)
 
-1. Clone into your system, link the repo to package **`ZHR_UTIL`**, pull.
-2. Activate in the order below (or right-click the package →
-   *Activate All Inactive ABAP Development Objects* once everything exists).
-
-### Activation order
-
-| # | Objects |
+| Area | Objects |
 |---|---|
-| 1 | Message class `ZMSG_HR360` |
-| 2 | `ZI_HR360_EMP_BASIC`, `ZI_HR360_EMP_CONTACT`, `ZI_HR360_EMP_BANK`, `ZI_HR360_EMP_PAY`, `ZI_HR360_HIREDATE`, `ZI_HR360_MANAGER`, `ZI_HR360_ORG_NODE` |
-| 3 | `ZI_HR360_PERSONAL`, `ZI_HR360_ORGASSIGN`, `ZI_HR360_EDUCATION`, `ZI_HR360_QUALIF`, `ZI_HR360_LEAVE`, `ZI_HR360_ATTENDANCE`, `ZI_HR360_PAYROLL`, `ZI_HR360_DOCUMENT` |
-| 4 | `ZI_HR360_ISSUE`, `ZI_HR360_TIMELINE` |
-| 5 | `ZI_HR360_EMPLOYEE` (root), `ZI_HR360_ORG_HIER` (hierarchy) |
-| 6 | DCL roles `ZI_HR360_*_DCL` |
-| 7 | Behavior definitions `ZI_HR360_EMPLOYEE`, `ZI_HR360_TIMELINE`, `ZI_HR360_ISSUE`, `ZI_HR360_ORG_HIER` → behavior pools (see caveat below) |
-| 8 | Projections `ZC_HR360_*`, then `ZC_HR360_KPI_OVERVIEW` |
-| 9 | Projection behavior definitions `ZC_HR360_*` |
-| 10 | Metadata extensions `ZC_HR360_*_MDE` |
-| 11 | Service definition `ZHR360_UI_SRVD` |
-| 12 | `ZIF_HR360_REPORT_ENGINE`, `ZCL_HR360_REPORT_ENGINE`, `ZCL_HR360_ORG_READER` |
-| 13 | Reports `ZHR360_R_EMP_MASTER_EXPORT`, `ZHR360_R_MISSING_DATA`, `ZHR360_R_HR_AUDIT` |
-| 14 | Test class `ZCL_HR360_ISSUE_TEST` (run ABAP Unit) |
+| Interface CDS | `ZI_HR360_EMP_BASIC`, `_EMP_CONTACT`, `_EMP_BANK`, `_EMP_PAY`, `_PERSONAL`, `_HIREDATE`, `_EMP_KPI`, `_ISSUE` (12-check framework), `_EMPLOYEE` (root, flat) |
+| Query views | `ZC_HR360_EMPLOYEE`, `ZC_HR360_ISSUE`, `ZC_HR360_KPI_OVERVIEW` (all read-only, inline `@UI`) |
+| DCL | `ZI_HR360_EMP_BASIC_DCL`, `ZI_HR360_EMPLOYEE_DCL` (`P_ORGIN`, activity Display) |
+| Service | `ZHR360_UI_SRVD` + `ZHR360_UI_SRVB_O4` (OData V4 – UI, **shipped in the repo** so a re-pull keeps it) |
+| Classes | `ZIF_HR360_REPORT_ENGINE`, `ZCL_HR360_REPORT_ENGINE`, `ZCL_HR360_ISSUE_TEST` |
+| Reports | `ZHR360_R_EMP_MASTER_EXPORT`, `ZHR360_R_MISSING_DATA`, `ZHR360_R_HR_AUDIT` |
+| Messages | `ZMSG_HR360` |
 
-### Behavior-pool caveat (important)
+## Pull & activate
 
-`ZBP_HR360_EMPLOYEE`, `ZBP_HR360_TIMELINE`, `ZBP_HR360_ISSUE` ship as abapGit
-source, but the RAP handler **method signatures** (`FOR READ`,
-`FOR READ … \_assoc`, `FOR INSTANCE AUTHORIZATION`) are tied to your kernel's
-RAP runtime version. If ADT flags a signature mismatch on activation:
+1. Link the repo to package **`ZHR_UTIL`**, pull.
+2. Right-click the package → **Activate All Inactive ABAP Development Objects**
+   (run twice if the first pass leaves cross-references inactive).
+3. The service binding `ZHR360_UI_SRVB_O4` is in the repo — after pull it should
+   be present and published. If it shows inactive, activate it.
+4. Preview: open `ZHR360_UI_SRVB_O4` → select `Employee` → **Preview**.
 
-1. Activate the behavior definition.
-2. On the behavior pool, use Quick Fix *"Add missing method implementations"*
-   to regenerate the local handler class skeleton with correct signatures.
-3. Paste the method **bodies** back from `*.clas.locals_imp.abap` (the SELECT
-   logic is system-independent).
+## Post-pull (not in the repo)
 
-## Post-pull steps (not in the repo)
+- **SLG0** — create Application Log object `ZHR360`, subobject `REPORT`
+  (used by the executable reports; they run without it, just no log).
+- **Authorization** — a role with `P_ORGIN` (activity *Display* = `R`) is
+  required to see any employee rows (enforced by DCL).
 
-1. **SLG0** — create Application Log object `ZHR360`, subobject `REPORT`.
-2. **Service binding** — create `ZHR360_UI_SRVB_O4` (OData V4 – UI) on
-   `ZHR360_UI_SRVD`, activate, publish on the front-end server.
-3. **Fiori** — in SAP Business Application Studio, generate:
-   - a *List Report + Object Page* app on `Employee`
-   - an *Analytical List Page* on `KpiOverview`
-   Then add the `/ui/orgTree` custom section to the Object Page app.
-4. **Authorizations** — business role `ZHR360_DISPLAY` = Fiori catalog +
-   `P_ORGIN` (activity *Display*) + the OData V4 service authorization.
-5. **ATC** — run with the Clean-ABAP + S/4HANA Readiness variants; release C1
-   on the interfaces + service after the first clean run.
+## `/staging` — next increments
+
+`orgassign`, `education`, `qualif`, `leave`, `attendance`, `payroll`, `document`,
+`timeline` interface views are parked here (dates already cast, texts stripped).
+They get moved into `/src` and wired one at a time — see `docs/BUILD_ISSUES_LOG.md`
+§E and the "next increments" list in `docs/12_version_history.md`.
 
 ## Known items
 
-See [`BUGS_AND_ISSUES.md`](BUGS_AND_ISSUES.md). Highlights:
-
-- `ZI_HR360_TIMELINE` / `ZI_HR360_ISSUE` are `#NOT_REQUIRED` at interface level
-  (row filtering is inherited / RBA-only) — add an explicit DCL before go-live.
-- Skills vs Certifications split (`QualificationType`) defaults to all-`SKILL`
-  until the client supplies certification qualification-group ids.
-- Structural authorization (`P_ORGINCON`) is not implemented — go-live
-  prerequisite for most HR deployments.
+`docs/BUILD_ISSUES_LOG.md` A1–A26 — every error hit during activation, its cause
+and fix. Read it before changing CDS/RAP objects.
