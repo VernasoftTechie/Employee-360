@@ -1,21 +1,10 @@
 unmanaged;
 strict ( 2 );
 
-// Read-only BO. No create / update / delete on any entity.
-// Child entities are association targets, each with its own behavior
-// definition + behavior pool (read only) - the HR_DataQuality_RAP_PoC pattern.
+// Read-only BO, root only. Details + data-quality issues are separate entity
+// sets in the service (queried by EmployeeID) - see BUILD_ISSUES_LOG.md A18.
 
 define behavior for ZI_HR360_EMPLOYEE alias Employee
 authorization master ( global )
 {
-  association _Personal      { }
-  association _OrgAssignment  { }
-  association _Education      { }
-  association _Qualification  { }
-  association _LeaveBalance   { }
-  association _Attendance     { }
-  association _Payroll        { }
-  association _Document       { }
-  association _Timeline       { }
-  association _DataQuality    { }
 }

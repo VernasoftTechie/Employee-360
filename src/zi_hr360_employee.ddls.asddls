@@ -2,21 +2,15 @@
 @EndUserText.label: 'HR360 - Employee (root)'
 @Metadata.ignorePropagatedAnnotations: true
 
+// Minimal viable root: Personal + OrgAssignment flattened in (LEFT JOIN), plus
+// the data-quality KPI counts and hire date. Detail children (education, leave,
+// ...) are added back one at a time - see docs/BUILD_ISSUES_LOG.md A18.
+
 define root view entity ZI_HR360_EMPLOYEE
   as select from ZI_HR360_EMP_BASIC as Emp
+    left outer join ZI_HR360_PERSONAL as Per on Per.EmployeeID = Emp.EmployeeID
     left outer join ZI_HR360_EMP_KPI  as Kpi on Kpi.EmployeeID = Emp.EmployeeID
     left outer join ZI_HR360_HIREDATE as Hd  on Hd.EmployeeID  = Emp.EmployeeID
-
-  association [0..1] to ZI_HR360_PERSONAL   as _Personal      on _Personal.EmployeeID      = $projection.EmployeeID
-  association [0..1] to ZI_HR360_ORGASSIGN  as _OrgAssignment on _OrgAssignment.EmployeeID = $projection.EmployeeID
-  association [0..*] to ZI_HR360_EDUCATION  as _Education      on _Education.EmployeeID     = $projection.EmployeeID
-  association [0..*] to ZI_HR360_QUALIF     as _Qualification  on _Qualification.EmployeeID = $projection.EmployeeID
-  association [0..*] to ZI_HR360_LEAVE      as _LeaveBalance   on _LeaveBalance.EmployeeID  = $projection.EmployeeID
-  association [0..*] to ZI_HR360_ATTENDANCE as _Attendance     on _Attendance.EmployeeID    = $projection.EmployeeID
-  association [0..*] to ZI_HR360_PAYROLL    as _Payroll        on _Payroll.EmployeeID       = $projection.EmployeeID
-  association [0..*] to ZI_HR360_DOCUMENT   as _Document       on _Document.EmployeeID      = $projection.EmployeeID
-  association [0..*] to ZI_HR360_TIMELINE   as _Timeline       on _Timeline.EmployeeID      = $projection.EmployeeID
-  association [0..*] to ZI_HR360_ISSUE      as _DataQuality    on _DataQuality.EmployeeID   = $projection.EmployeeID
 {
   key Emp.EmployeeID                                       as EmployeeID,
       Emp.LastName                                         as LastName,
@@ -35,6 +29,17 @@ define root view entity ZI_HR360_EMPLOYEE
       Emp.OrgUnit                                          as OrgUnit,
       Emp.PositionId                                       as PositionId,
       Emp.CostCenter                                       as CostCenter,
+      Emp.Job                                              as Job,
+
+      Per.BirthPlace                                       as BirthPlace,
+      Per.MaritalStatus                                    as MaritalStatus,
+      Per.Street                                           as Street,
+      Per.City                                             as City,
+      Per.PostalCode                                       as PostalCode,
+      Per.Country                                          as Country,
+      Per.EmailAddress                                     as EmailAddress,
+      Per.MobileNumber                                     as MobileNumber,
+      Per.IBAN                                             as IBAN,
 
       coalesce( Kpi.TotalIssueCount,    0 )                as TotalIssueCount,
       coalesce( Kpi.CriticalIssueCount, 0 )                as CriticalIssueCount,
@@ -52,16 +57,5 @@ define root view entity ZI_HR360_EMPLOYEE
         else cast( 3 as abap.int4 )
       end                                                       as QualityStatusCriticality,
 
-      division( ( 12 - coalesce( Kpi.TotalIssueCount, 0 ) ) * 100, 12, 1 ) as CompletenessPercent,
-
-      _Personal,
-      _OrgAssignment,
-      _Education,
-      _Qualification,
-      _LeaveBalance,
-      _Attendance,
-      _Payroll,
-      _Document,
-      _Timeline,
-      _DataQuality
+      cast( division( ( 12 - coalesce( Kpi.TotalIssueCount, 0 ) ) * 100, 12, 1 ) as abap.dec( 5, 1 ) ) as CompletenessPercent
 }
