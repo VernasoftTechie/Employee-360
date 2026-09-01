@@ -3,20 +3,13 @@
 @Metadata.ignorePropagatedAnnotations: true
 
 define view entity ZI_HR360_LEAVE
-  as select from pa2006 as Qta
-
-    left outer join t556b as QT on  QT.sprsl = $session.system_language
-                                and QT.ktart = Qta.ktart
-                                and QT.moabw = Qta.quomo
-
+  as select from pa2006 as Q
 {
-  key Qta.pernr                          as EmployeeID,
-  key Qta.ktart                          as QuotaType,
-  key Qta.desta                          as DeductionFrom,
-      QT.ktext                           as QuotaTypeName,
-      Qta.deend                          as DeductionTo,
-      Qta.anzhl                          as Entitlement,
-      Qta.kverb                          as Deducted,
-      Qta.anzhl - Qta.kverb              as Remaining,
-      cast( 'Days' as abap.char( 10 ) )  as Unit
+  key Q.pernr           as EmployeeID,
+  key Q.ktart           as QuotaType,
+  key Q.desta           as DeductionFrom,
+      Q.deend           as DeductionTo,
+      Q.anzhl           as Entitlement,
+      Q.kverb           as Deducted,
+      Q.anzhl - Q.kverb as Remaining
 }

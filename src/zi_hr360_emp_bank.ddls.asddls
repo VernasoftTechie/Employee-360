@@ -1,15 +1,15 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
-@EndUserText.label: 'HR360 - Employee Bank Details'
+@EndUserText.label: 'HR360 - Employee Bank'
 @Metadata.ignorePropagatedAnnotations: true
 
 define view entity ZI_HR360_EMP_BANK
   as select from pa0009
 {
-  key pernr    as EmployeeID,
-      bankl    as BankKey,
-      bankn    as BankAccount,
-      bkont    as BankControlKey,
-      iban     as IBAN
+  key pernr as EmployeeID,
+      bankl as BankKey,
+      bankn as BankAccount,
+      bkont as BankControlKey,
+      iban  as IBAN
 }
 where subty = '0'
   and begda <= $session.system_date

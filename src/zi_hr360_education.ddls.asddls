@@ -4,23 +4,13 @@
 
 define view entity ZI_HR360_EDUCATION
   as select from pa0022 as E
-
-    left outer join t517t as ETyp on  ETyp.sprsl = $session.system_language
-                                  and ETyp.slart = E.slart
-    left outer join t517x as ECrt on  ECrt.sprsl = $session.system_language
-                                  and ECrt.sltp1 = E.sltp1
-
 {
-  key E.pernr        as EmployeeID,
-  key E.subty        as EducationType,
-  key E.begda        as ValidFrom,
-      E.seqnr        as EducationSeqNr,
-      ETyp.stext     as EducationTypeName,
-      E.slabs        as Establishment,
-      E.insti        as InstituteName,
-      E.sltp1        as Certificate,
-      ECrt.stext     as CertificateName,
-      E.sltp2        as Discipline,
-      E.ausbi        as EducationalEstablishmentKey,
-      E.endda        as ValidTo
+  key E.pernr as EmployeeID,
+  key E.subty as EducationType,
+  key E.begda as ValidFrom,
+      E.seqnr as EducationSeqNr,
+      E.slart as EducationCategory,
+      E.slabs as Establishment,
+      E.insti as InstituteName,
+      E.endda as ValidTo
 }

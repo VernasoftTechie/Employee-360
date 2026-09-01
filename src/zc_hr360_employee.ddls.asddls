@@ -1,5 +1,5 @@
 @AccessControl.authorizationCheck: #CHECK
-@EndUserText.label: 'HR360 - Employee (projection)'
+@EndUserText.label: 'HR360 - Employee (proj)'
 @Metadata.allowExtensions: true
 @Search.searchable: true
 
@@ -8,9 +8,7 @@ define root view entity ZC_HR360_EMPLOYEE
   as projection on ZI_HR360_EMPLOYEE
 {
   key EmployeeID,
-
       @Search.defaultSearchElement: true
-      @Search.fuzzinessThreshold: 0.8
       LastName,
       @Search.defaultSearchElement: true
       FirstName,
@@ -22,29 +20,18 @@ define root view entity ZC_HR360_EMPLOYEE
       HireDate,
       CompanyCode,
       PersonnelArea,
-      PersonnelAreaName,
       PersonnelSubarea,
       EmployeeGroup,
-      EmployeeGroupName,
       EmployeeSubgroup,
-      EmployeeSubgroupName,
       @Search.defaultSearchElement: true
       OrgUnit,
-      OrgUnitName,
       Position,
       CostCenter,
-      ManagerName,
-
       TotalIssueCount,
       CriticalIssueCount,
       WarningIssueCount,
       QualityStatus,
-      case QualityStatus
-        when 'OK'       then 3
-        when 'WARNING'  then 2
-        when 'CRITICAL' then 1
-        else 0
-      end                as QualityStatusCriticality,
+      case QualityStatus when 'OK' then 3 when 'WARNING' then 2 when 'CRITICAL' then 1 else 0 end as QualityStatusCriticality,
       CompletenessPercent,
 
       _Personal      : redirected to ZC_HR360_PERSONAL,
