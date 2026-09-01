@@ -6,7 +6,7 @@
 // the data-quality KPI counts and hire date. Detail children (education, leave,
 // ...) are added back one at a time - see docs/BUILD_ISSUES_LOG.md A18.
 
-define root view entity ZI_HR360_EMPLOYEE
+define view entity ZI_HR360_EMPLOYEE
   as select from ZI_HR360_EMP_BASIC as Emp
     left outer join ZI_HR360_PERSONAL as Per on Per.EmployeeID = Emp.EmployeeID
     left outer join ZI_HR360_EMP_KPI  as Kpi on Kpi.EmployeeID = Emp.EmployeeID

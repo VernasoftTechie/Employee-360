@@ -1,11 +1,13 @@
 @AccessControl.authorizationCheck: #CHECK
-@EndUserText.label: 'HR360 - Employee (proj)'
+@EndUserText.label: 'HR360 - Employee (query)'
 @Metadata.allowExtensions: true
 @Search.searchable: true
 
-define root view entity ZC_HR360_EMPLOYEE
-  provider contract transactional_query
-  as projection on ZI_HR360_EMPLOYEE
+// Read-only query view over the flattened employee. Exposed directly in the
+// service. The transactional RAP BO wrapper is deferred (BUILD_ISSUES_LOG.md A19).
+
+define view entity ZC_HR360_EMPLOYEE
+  as select from ZI_HR360_EMPLOYEE
 {
   key EmployeeID,
       @Search.defaultSearchElement: true

@@ -74,10 +74,10 @@ CLASS lcl_app IMPLEMENTATION.
 
   METHOD build_scope.
     rs_scope = VALUE #(
-      pernr    = VALUE #( FOR r IN s_pernr[] ( CORRESPONDING #( r ) ) )
-      bukrs    = VALUE #( FOR r IN s_bukrs[] ( CORRESPONDING #( r ) ) )
-      werks    = VALUE #( FOR r IN s_werks[] ( CORRESPONDING #( r ) ) )
-      orgeh    = VALUE #( FOR r IN s_orgeh[] ( CORRESPONDING #( r ) ) )
+      pernr    = s_pernr[]
+      bukrs    = s_bukrs[]
+      werks    = s_werks[]
+      orgeh    = s_orgeh[]
       key_date = p_keydt ).
   ENDMETHOD.
 

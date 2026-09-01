@@ -76,10 +76,10 @@ CLASS lcl_app IMPLEMENTATION.
 
   METHOD build_scope.
     rs_scope = VALUE #(
-      pernr       = VALUE #( FOR r IN s_pernr[] ( CORRESPONDING #( r ) ) )
-      bukrs       = VALUE #( FOR r IN s_bukrs[] ( CORRESPONDING #( r ) ) )
-      werks       = VALUE #( FOR r IN s_werks[] ( CORRESPONDING #( r ) ) )
-      orgeh       = VALUE #( FOR r IN s_orgeh[] ( CORRESPONDING #( r ) ) )
+      pernr       = s_pernr[]
+      bukrs       = s_bukrs[]
+      werks       = s_werks[]
+      orgeh       = s_orgeh[]
       key_date    = p_keydt
       active_only = p_actv ).
   ENDMETHOD.
@@ -133,8 +133,7 @@ CLASS lcl_app IMPLEMENTATION.
         DATA(log) = cl_bali_log=>create_with_header(
           cl_bali_header_setter=>create(
             object     = 'ZHR360'
-            subobject  = 'REPORT'
-            external_id = CONV bal_s_extn( |{ sy-repid }/{ sy-datum }/{ sy-uzeit }| ) ) ).
+            subobject  = 'REPORT' ) ).
         log->add_item( cl_bali_free_text_setter=>create(
           severity = if_bali_constants=>c_severity_status
           text     = CONV #( |{ iv_rows } rows exported| ) ) ).
