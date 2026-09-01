@@ -50,11 +50,17 @@ define root view entity ZI_HR360_EMPLOYEE
       Mgr.ManagerID                                        as ManagerID,
       Mgr.ManagerName                                      as ManagerName,
 
-      coalesce( Kpi.TotalIssueCount,    0 )                as TotalIssueCount,
-      coalesce( Kpi.CriticalIssueCount, 0 )                as CriticalIssueCount,
-      coalesce( Kpi.WarningIssueCount,  0 )                as WarningIssueCount,
-      coalesce( Kpi.QualityStatus, cast( 'OK' as abap.char( 8 ) ) )                 as QualityStatus,
-      coalesce( Kpi.CompletenessPercent, cast( '100.0' as abap.dec( 5, 1 ) ) )      as CompletenessPercent,
+      cast( coalesce( Kpi.TotalIssueCount,    0 ) as abap.int4 )  as TotalIssueCount,
+      cast( coalesce( Kpi.CriticalIssueCount, 0 ) as abap.int4 )  as CriticalIssueCount,
+      cast( coalesce( Kpi.WarningIssueCount,  0 ) as abap.int4 )  as WarningIssueCount,
+
+      case
+        when coalesce( Kpi.CriticalIssueCount, 0 ) > 0 then cast( 'CRITICAL' as abap.char( 8 ) )
+        when coalesce( Kpi.TotalIssueCount,    0 ) > 0 then cast( 'WARNING'  as abap.char( 8 ) )
+        else cast( 'OK' as abap.char( 8 ) )
+      end                                                          as QualityStatus,
+
+      cast( ( 12 - coalesce( Kpi.TotalIssueCount, 0 ) ) * 100 / 12 as abap.dec( 5, 1 ) ) as CompletenessPercent,
 
       _Personal,
       _OrgAssignment,
