@@ -16,7 +16,7 @@ define view entity ZC_HR360_KPI_OVERVIEW
       sum( TotalIssueCount )                                 as MissingDataCount,
       sum( CriticalIssueCount )                              as CriticalIssueCount,
       sum( WarningIssueCount )                               as WarningIssueCount,
-      avg( CompletenessPercent as abap.dec( 5, 1 ) )         as AvgCompletenessPercent
+      avg( CompletenessPercent )                             as AvgCompletenessPercent
 }
 group by
   CompanyCode,

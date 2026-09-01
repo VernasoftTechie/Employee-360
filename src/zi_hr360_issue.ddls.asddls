@@ -2,10 +2,11 @@
 @EndUserText.label: 'HR360 - Data Quality Issue'
 @Metadata.ignorePropagatedAnnotations: true
 
-// Extensible check framework (from HR_DataQuality_RAP_PoC). Standard tables only,
-// no catalog table - CheckID/Category/Severity/IssueDescription/FieldName are CDS
-// literals. Every UNION branch projects the SAME element names/types AND the
-// SAME key markers (docs/BUILD_ISSUES_LOG.md A5/A6). ACTIVE BRANCH COUNT = 12.
+// Extensible check framework (from HR_DataQuality_RAP_PoC). No catalog table -
+// literals per branch. Every UNION branch projects the SAME element names/types
+// AND the SAME key markers (BUILD_ISSUES_LOG.md A5/A6). SeverityCriticality is a
+// literal per branch (1=critical/red, 2=warning/orange) so the projection needs
+// no CASE (A14). ACTIVE BRANCH COUNT = 12.
 
 define view entity ZI_HR360_ISSUE
   as select from ZI_HR360_EMP_BASIC as Emp
@@ -14,6 +15,7 @@ define view entity ZI_HR360_ISSUE
   key cast( 'MAND_DOB' as abap.char( 12 ) )                 as CheckID,
       cast( 'MANDATORY' as abap.char( 20 ) )                as Category,
       cast( 'C' as abap.char( 1 ) )                         as Severity,
+      cast( 1 as abap.int4 )                                as SeverityCriticality,
       cast( 'Date of birth is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'DateOfBirth' as abap.char( 30 ) )              as FieldName
 }
@@ -26,6 +28,7 @@ union all
   key cast( 'MAND_GENDER' as abap.char( 12 ) )   as CheckID,
       cast( 'MANDATORY' as abap.char( 20 ) )     as Category,
       cast( 'C' as abap.char( 1 ) )              as Severity,
+      cast( 1 as abap.int4 )                     as SeverityCriticality,
       cast( 'Gender is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'Gender' as abap.char( 30 ) )        as FieldName
 }
@@ -38,6 +41,7 @@ union all
   key cast( 'STAT_NATION' as abap.char( 12 ) )   as CheckID,
       cast( 'STATUTORY' as abap.char( 20 ) )     as Category,
       cast( 'C' as abap.char( 1 ) )              as Severity,
+      cast( 1 as abap.int4 )                     as SeverityCriticality,
       cast( 'Nationality is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'Nationality' as abap.char( 30 ) )   as FieldName
 }
@@ -50,6 +54,7 @@ union all
   key cast( 'ORG_COSTCTR' as abap.char( 12 ) )   as CheckID,
       cast( 'ORG_ASSIGNMENT' as abap.char( 20 ) ) as Category,
       cast( 'C' as abap.char( 1 ) )              as Severity,
+      cast( 1 as abap.int4 )                     as SeverityCriticality,
       cast( 'Cost center is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'CostCenter' as abap.char( 30 ) )    as FieldName
 }
@@ -62,8 +67,9 @@ union all
   key cast( 'ORG_POSITION' as abap.char( 12 ) )  as CheckID,
       cast( 'ORG_ASSIGNMENT' as abap.char( 20 ) ) as Category,
       cast( 'C' as abap.char( 1 ) )              as Severity,
+      cast( 1 as abap.int4 )                     as SeverityCriticality,
       cast( 'Position is not assigned' as abap.char( 60 ) ) as IssueDescription,
-      cast( 'Position' as abap.char( 30 ) )      as FieldName
+      cast( 'PositionId' as abap.char( 30 ) )    as FieldName
 }
 where Emp.PositionId is initial
 
@@ -75,6 +81,7 @@ union all
   key cast( 'PAY_BASICPAY' as abap.char( 12 ) )  as CheckID,
       cast( 'PAYROLL' as abap.char( 20 ) )       as Category,
       cast( 'W' as abap.char( 1 ) )              as Severity,
+      cast( 2 as abap.int4 )                     as SeverityCriticality,
       cast( 'Basic pay record is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'BasicPay' as abap.char( 30 ) )      as FieldName
 }
@@ -88,6 +95,7 @@ union all
   key cast( 'CONTACT_MAIL' as abap.char( 12 ) )  as CheckID,
       cast( 'CONTACT' as abap.char( 20 ) )       as Category,
       cast( 'W' as abap.char( 1 ) )              as Severity,
+      cast( 2 as abap.int4 )                     as SeverityCriticality,
       cast( 'Email address is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'EmailAddress' as abap.char( 30 ) )  as FieldName
 }
@@ -101,6 +109,7 @@ union all
   key cast( 'BANK_IBAN' as abap.char( 12 ) )     as CheckID,
       cast( 'BANK' as abap.char( 20 ) )          as Category,
       cast( 'C' as abap.char( 1 ) )              as Severity,
+      cast( 1 as abap.int4 )                     as SeverityCriticality,
       cast( 'IBAN / bank details missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'IBAN' as abap.char( 30 ) )          as FieldName
 }
@@ -114,6 +123,7 @@ union all
   key cast( 'EDU_MISSING' as abap.char( 12 ) )   as CheckID,
       cast( 'EDUCATION' as abap.char( 20 ) )     as Category,
       cast( 'W' as abap.char( 1 ) )              as Severity,
+      cast( 2 as abap.int4 )                     as SeverityCriticality,
       cast( 'No education record on file' as abap.char( 60 ) ) as IssueDescription,
       cast( 'Education' as abap.char( 30 ) )     as FieldName
 }
@@ -127,6 +137,7 @@ union all
   key cast( 'QUAL_MISSING' as abap.char( 12 ) )  as CheckID,
       cast( 'QUALIFICATION' as abap.char( 20 ) ) as Category,
       cast( 'W' as abap.char( 1 ) )              as Severity,
+      cast( 2 as abap.int4 )                     as SeverityCriticality,
       cast( 'No qualification on file' as abap.char( 60 ) ) as IssueDescription,
       cast( 'Qualification' as abap.char( 30 ) ) as FieldName
 }
@@ -140,6 +151,7 @@ union all
   key cast( 'CONTACT_ADDR' as abap.char( 12 ) )  as CheckID,
       cast( 'CONTACT' as abap.char( 20 ) )       as Category,
       cast( 'W' as abap.char( 1 ) )              as Severity,
+      cast( 2 as abap.int4 )                     as SeverityCriticality,
       cast( 'Address is missing' as abap.char( 60 ) ) as IssueDescription,
       cast( 'Address' as abap.char( 30 ) )       as FieldName
 }
@@ -152,6 +164,7 @@ union all
   key cast( 'INVALID_DOB' as abap.char( 12 ) )   as CheckID,
       cast( 'INVALID' as abap.char( 20 ) )       as Category,
       cast( 'C' as abap.char( 1 ) )              as Severity,
+      cast( 1 as abap.int4 )                     as SeverityCriticality,
       cast( 'Date of birth is in the future' as abap.char( 60 ) ) as IssueDescription,
       cast( 'DateOfBirth' as abap.char( 30 ) )   as FieldName
 }

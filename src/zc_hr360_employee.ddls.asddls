@@ -31,7 +31,7 @@ define root view entity ZC_HR360_EMPLOYEE
       CriticalIssueCount,
       WarningIssueCount,
       QualityStatus,
-      case QualityStatus when 'OK' then 3 when 'WARNING' then 2 when 'CRITICAL' then 1 else 0 end as QualityStatusCriticality,
+      QualityStatusCriticality,
       CompletenessPercent,
 
       _Personal      : redirected to ZC_HR360_PERSONAL,

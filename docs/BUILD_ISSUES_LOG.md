@@ -24,6 +24,9 @@ with the root cause and the fix. Use this to avoid repeating the same mistakes.
 | A11 | 🔴 "The column STAT2 is unknown" — **REPEATED across v0.7/v0.8/v0.9** | `PA0001` on this system does **not** expose `STAT2` (nor `STAT1`/`STAT3`). Employment status is not on the org-assignment infotype here. I kept `O.stat2` after it first errored — the exact "repeating the same mistake" the user called out. | Removed `EmploymentStatus` from `ZI_HR360_EMP_BASIC` entirely. Root/reports/KPI now use a literal placeholder or omit it. Re-source from `PA0000-STAT2` only after verifying that field exists in SE11. | v0.10 |
 | A12 | 🔴 "POSITION is a reserved word (choose another field name)" | `Position` / `POSITION` is a reserved word in CDS / the generated DB view. Cannot be a CDS element name. | Renamed the element `Position` → `PositionId` everywhere (views, projections, root, report engine, tests). Other names to avoid: `CLIENT`, `KEY`, `USER`, `LANGUAGE`, `DATE`, `TIME`, `VALUE`, `LEVEL`, `NAME`, `TYPE` (context-dependent). | v0.10 |
 | A13 | 🔴 "ZI_HR360_PAYROLL-ANNUALSALARY reference information missing or data type wrong" | A DDIC **CURR** (amount) or **QUAN** (quantity) field selected into a CDS element needs a **reference field** (currency/unit key) that is also in the view **and** a `@Semantics.amount.currencyCode` / `.quantity.unitOfMeasure` annotation — OR you must `cast` it to a plain type. Affected: `ANSAL` (CURR), `ANZHL`/`KVERB` (QUAN), `ABWTG`/`STDAZ` (QUAN). | `cast( <field> as abap.dec( n, 2 ) )` for every amount/quantity field — plain decimal, no reference needed. Proper `@Semantics.amount…` added later with the currency/unit column. | v0.10 |
+| A14 | 🔴 "Field SEVERITYCRITICALITY contains a not supported expression" + "Could not parse DDL source for entity ZC_HR360_*" | A **projection view** (`as projection on …`) may only project existing elements, redirects, and a very small set of functions. Arbitrary `CASE … END` expressions are **not allowed in a projection** — they must live in the underlying **interface** view. Once one element fails, the whole projection "could not be parsed", which cascades to "not part of a business object" on every child projection and the service. | Moved the `CASE` criticality columns **into the interface views**: `SeverityCriticality` into `ZI_HR360_ISSUE`, `QualityStatusCriticality` into `ZI_HR360_EMPLOYEE`. Projections just list the element name. | v0.11 |
+| A15 | 🔴 "Function AVG: Narrowing type DEC(11,1) not allowed" | `avg( CompletenessPercent as abap.dec( 5, 1 ) )` — the source is already `DEC(11,1)` (result of `division(…, 12, 1)`); `AVG( x AS <type> )` may only **widen**, never narrow. | Use plain `avg( CompletenessPercent )` (let the result type stand), or cast to a wider type. | v0.11 |
+| A16 | 🟡 "CAST INT4 to identical type" / "CAST CHAR to identical type" | Redundant `cast( x as abap.int4 )` where `x` is already `int4` (e.g. `cast( coalesce( Kpi.TotalIssueCount, 0 ) as abap.int4 )` — `coalesce` of two int4 is already int4). Warning only, but noise. | Drop the redundant outer `cast`. | v0.11 |
 
 **⚠ Self-note:** before every "column unknown / reserved / reference" conclusion,
 check this table first. STAT2 (A11) was flagged in an earlier screenshot and I
@@ -37,7 +40,16 @@ LEVEL NAME TYPE UNION ALL DISTINCT` in various contexts — when in doubt add an
 ### DDIC field types that need a `cast` (or a reference field + `@Semantics`)
 - **CURR** (amounts): `PA0008-ANSAL`, wage-type `BETxx` — `cast( … as abap.dec(15,2) )`
 - **QUAN** (quantities/hours/days): `PA2006-ANZHL/KVERB`, `PA2002-ABWTG/STDAZ`,
-  `PA0008-DIVGV` — `cast( … as abap.dec(11,2) )`
+  `PA0008-DIVGV`, `PA0024-AUSPR` — `cast( … as abap.dec(n,2) )`
+
+### Projection views (`as projection on …`) — rules
+- Only project **existing element names**, `redirected to` associations, and a
+  narrow function set. **No `CASE`, no arithmetic, no `cast`, no literals.**
+  Put every computed column in the **interface** view; the projection just names it.
+- `AVG( x AS <type> )` may only **widen** the type, never narrow.
+- Compact one-line element lists (`key A, B, C,`) parse fine, but if a projection
+  "could not be parsed", reformat one-element-per-line and check for a stray
+  computed column first.
 
 ---
 

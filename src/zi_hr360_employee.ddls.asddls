@@ -36,15 +36,21 @@ define root view entity ZI_HR360_EMPLOYEE
       Emp.PositionId                                       as PositionId,
       Emp.CostCenter                                       as CostCenter,
 
-      cast( coalesce( Kpi.TotalIssueCount,    0 ) as abap.int4 ) as TotalIssueCount,
-      cast( coalesce( Kpi.CriticalIssueCount, 0 ) as abap.int4 ) as CriticalIssueCount,
-      cast( coalesce( Kpi.WarningIssueCount,  0 ) as abap.int4 ) as WarningIssueCount,
+      coalesce( Kpi.TotalIssueCount,    0 )                as TotalIssueCount,
+      coalesce( Kpi.CriticalIssueCount, 0 )                as CriticalIssueCount,
+      coalesce( Kpi.WarningIssueCount,  0 )                as WarningIssueCount,
 
       case
         when coalesce( Kpi.CriticalIssueCount, 0 ) > 0 then cast( 'CRITICAL' as abap.char( 8 ) )
         when coalesce( Kpi.TotalIssueCount,    0 ) > 0 then cast( 'WARNING'  as abap.char( 8 ) )
         else cast( 'OK' as abap.char( 8 ) )
       end                                                       as QualityStatus,
+
+      case
+        when coalesce( Kpi.CriticalIssueCount, 0 ) > 0 then cast( 1 as abap.int4 )
+        when coalesce( Kpi.TotalIssueCount,    0 ) > 0 then cast( 2 as abap.int4 )
+        else cast( 3 as abap.int4 )
+      end                                                       as QualityStatusCriticality,
 
       division( ( 12 - coalesce( Kpi.TotalIssueCount, 0 ) ) * 100, 12, 1 ) as CompletenessPercent,
 
