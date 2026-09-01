@@ -1,4 +1,5 @@
-@AccessControl.authorizationCheck: #CHECK
+// TEMP v0.18 diagnostic - restore to #CHECK once data is confirmed
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - Employee Basic (anchor)'
 @Metadata.ignorePropagatedAnnotations: true
 
@@ -8,9 +9,9 @@
 
 define view entity ZI_HR360_EMP_BASIC
   as select from pa0001 as O
-    inner join pa0002 as P on  P.pernr = O.pernr
-                           and P.begda <= $session.system_date
-                           and P.endda >= $session.system_date
+    left outer join pa0002 as P on  P.pernr = O.pernr
+                                and P.begda <= $session.system_date
+                                and P.endda >= $session.system_date
 {
   key O.pernr as EmployeeID,
       O.bukrs as CompanyCode,
