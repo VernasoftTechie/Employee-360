@@ -127,3 +127,12 @@ LEVEL NAME TYPE UNION ALL DISTINCT` in various contexts — when in doubt add an
 4. **Don't invent HR text-table field names.** Expose raw codes; add texts only when verified against DDIC (SE11) on the target system.
 5. **RAP read-only children must be compositions** to be exposed as projection entity sets with `redirected to`.
 6. **Hand-written abapGit metadata XML is risky** for DDLX/MSAG/SRVD. Prefer object types whose abapGit format is simple and proven (DDLS, CLAS, PROG, BDEF-source), or create the object in ADT and let abapGit serialize it.
+
+---
+
+## G. Repo hygiene
+
+| # | Issue | Fix | Commit |
+|---|---|---|---|
+| G1 | Service binding `ZHR360_UI_SRVB_O4` disappeared / needed recreating after every `abapGit` pull | The binding was **not in the repo** (we had left it "for the implementer"). Now shipped as `src/zhr360_ui_srvb_o4.srvb.xml` + `.g4ba.xml` with `PUBLISHED=true` — a pull recreates and publishes it. | v0.19 |
+| G2 | `/src` cluttered with unwired WIP objects → longer, noisier activation runs | Only the **active green-build** objects stay in `/src`. Unwired detail views (`orgassign`, `education`, `qualif`, `leave`, `attendance`, `payroll`, `document`, `timeline`) moved to `/staging/detail_views/` — abapGit only processes `STARTING_FOLDER=/src/`, so it ignores them. They keep the fixes already applied (date casts, no text joins). | v0.19 |
