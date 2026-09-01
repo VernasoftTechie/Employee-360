@@ -71,7 +71,7 @@ second binding on the **same** service definition — no CDS change.
 Publishing steps (yours):
 1. Create binding `ZHR360_UI_SRVB_O4`, type OData V4 UI, add service definition
    `ZHR360_UI_SRVD`, **Activate**.
-2. Assign all objects to package **`Z001`** and one transport.
+2. Assign all objects to package **`ZHR_UTIL`** and one transport.
 3. Front-end: expose the service (`/IWFND/V4_ADMIN` → Publish) if the FES is a
    separate client/system; embedded → automatic.
 4. Create the Fiori app + tile (Doc 07 §6).

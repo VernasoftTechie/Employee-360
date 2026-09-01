@@ -103,4 +103,4 @@ A 15-minute walkthrough for stakeholders. Assumes the apps are deployed and
 | What if we don't use ArchiveLink / qualifications? | Those sections just show nothing — no errors, no config forced. |
 | How hard is a new data-quality check? | One CDS `UNION` branch. No table, service or UI change. |
 | Custom tables added? | Zero. Everything reads SAP standard tables. |
-| Package? | Everything goes into `Z001` on abapGit pull. |
+| Package? | Everything goes into `ZHR_UTIL` on abapGit pull. |

@@ -10,8 +10,9 @@ reporting layer.
 - **Standard SAP tables only — zero custom DDIC objects**
 - Data-quality check framework **reused & extended from
   `HR_DataQuality_RAP_PoC`**
-- Package: **`Z001`** — assign it in abapGit when you pull; this repo creates
-  no package.
+- Package: **`ZHR_UTIL`** — every object in this repo belongs to this single
+  package. `src/package.devc.xml` carries only the package description; link the
+  repo to `ZHR_UTIL` in the abapGit repo settings on first pull (no sub-packages).
 
 Design is fully documented under [`/docs`](docs) (01–13). Nothing here should be
 activated before reading `docs/01_solution_architecture.md`.
@@ -28,7 +29,7 @@ activated before reading `docs/01_solution_architecture.md`.
 
 ## Pull with abapGit
 
-1. Clone into your system, map the package to **`Z001`**, pull.
+1. Clone into your system, link the repo to package **`ZHR_UTIL`**, pull.
 2. Activate in the order below (or right-click the package →
    *Activate All Inactive ABAP Development Objects* once everything exists).
 

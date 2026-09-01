@@ -16,11 +16,15 @@ No ABAP until docs 02–08 are approved (Rulebook §7/§8).
 | Concurrency / ETag | none | read-only |
 | Number ranges | none | no created data |
 
-Read-only children are modelled as **CDS associations** exposed in the behavior
-(not compositions) — the same pattern as the approved `HR_DataQuality_RAP_PoC`
-(`association _Issue { }`). Associations are sufficient for Object-Page facets and
-read-by-association; compositions would only add lifecycle machinery this BO does
-not need.
+**As built (v0.3):** the 8 employee-detail entities (Personal, OrgAssignment,
+Education, Qualification, LeaveBalance, Attendance, PayrollItem, Document) are
+modelled as **read-only compositions** of the root, so the whole tree lives in
+one behavior definition (`ZI_HR360_EMPLOYEE`) and one behavior pool
+(`ZBP_HR360_EMPLOYEE`). The two derived UNION views (`ZI_HR360_TIMELINE`,
+`ZI_HR360_ISSUE`) stay association-linked with their own small BDEF + pool — the
+`HR_DataQuality_RAP_PoC` `association _Issue { }` pattern. `_Manager` /
+`_DirectReport` are self-associations on the root. See Doc 10 §2.4 / §2.5 for the
+final object list.
 
 ---
 

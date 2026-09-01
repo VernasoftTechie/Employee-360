@@ -4,6 +4,19 @@ All notable changes to the design and the repository.
 
 ---
 
+## v0.4 — 2026-09-01 — Package `ZHR_UTIL` + as-built doc sync
+
+- **ABAP package changed `Z001` → `ZHR_UTIL`** across all docs and the README.
+  Added `src/package.devc.xml` (description only) so abapGit recognises the
+  single package; the repo is linked to `ZHR_UTIL` on pull. No sub-packages.
+- Doc 10 (Technical Spec) synced to what was actually built in v0.3:
+  child detail entities are **compositions** of the root (one BDEF, one behavior
+  pool `ZBP_HR360_EMPLOYEE` + `ZBP_HR360_TIMELINE` + `ZBP_HR360_ISSUE`), DCL
+  inheritance chain, `#NOT_REQUIRED` on the derived/building-block views.
+- Doc 01 status updated to APPROVED (rev 3).
+
+---
+
 ## v0.3 — 2026-08-31 — Design baseline (docs) + initial build
 
 **Docs**
@@ -36,7 +49,7 @@ All notable changes to the design and the repository.
 - **Standard tables only** — removed all custom DDIC (`ZT_HR360_CHECK_CAT`,
   `ZT_HR360_CERT`). Check metadata inlined into `ZI_HR360_ISSUE` as CDS
   literals; certifications merged into `_Qualification` (PA0024).
-- ABAP package fixed to **`Z001`** (existing).
+- ABAP package fixed to **`ZHR_UTIL`** (existing).
 - Open items D-7.1 / 7.3 / 7.4 / 7.5 / 7.6 / 7.7 / 11.2 / 13 / 5 resolved to
   defaults.
 

@@ -15,7 +15,7 @@
 | Service | OData V4, UI |
 | UI | Fiori Elements (List Report, Object Page, Analytical List Page) + one freestyle SAPUI5 custom section |
 | Repository | abapGit, `github.com/VernasoftTechie/Employee-360`, `/src` flat, `FOLDER_LOGIC = PREFIX` |
-| ABAP package | **`Z001`** (existing) — assigned on abapGit pull; no package created by this project |
+| ABAP package | **`ZHR_UTIL`** — one package for every object; `src/package.devc.xml` carries its description, repo linked to `ZHR_UTIL` in abapGit on pull (no sub-packages) |
 | Transport | one workbench TR for all objects |
 
 ---
@@ -43,29 +43,48 @@
 
 One per projection listed in Doc 07 §8.
 
-### 2.4 Behavior (`/src/*.bdef.asbdef`)
+### 2.4 Behavior (`/src/*.bdef.asbdef`) — as built
 
-`ZI_HR360_EMPLOYEE` (interface BDEF — contains all `define behavior for`
-interface entities), `ZC_HR360_EMPLOYEE` (projection BDEF),
-`ZI_HR360_ORG_HIER` (hierarchy BDEF).
+Child detail entities are modelled as **compositions** of the root, so the root
+BDEF covers the root + all 8 composition children in one file:
 
-### 2.5 Behavior pools (`/src/zbp_hr360_*.clas.abap` + `.clas.locals_imp.abap`)
+- `ZI_HR360_EMPLOYEE` — root + `Personal` / `OrgAssignment` / `Education` /
+  `Qualification` / `LeaveBalance` / `Attendance` / `PayrollItem` / `Document`
+- `ZI_HR360_TIMELINE`, `ZI_HR360_ISSUE` — standalone (derived UNION views reached
+  by association, own BDEF — the PoC pattern)
+- `ZI_HR360_ORG_HIER` — hierarchy BDEF
+- `ZC_HR360_EMPLOYEE`, `ZC_HR360_TIMELINE`, `ZC_HR360_ISSUE` — projection BDEFs
 
-`ZBP_HR360_EMPLOYEE`, `ZBP_HR360_PERSONAL`, `ZBP_HR360_ORGASSIGN`,
-`ZBP_HR360_EDUCATION`, `ZBP_HR360_QUALIF`, `ZBP_HR360_LEAVE`,
-`ZBP_HR360_ATTENDANCE`, `ZBP_HR360_PAYROLL`, `ZBP_HR360_DOCUMENT`,
-`ZBP_HR360_TIMELINE`, `ZBP_HR360_ISSUE`, `ZBP_HR360_ORG_HIER`.
+### 2.5 Behavior pools (`/src/zbp_hr360_*.clas.abap` + `.clas.locals_imp.abap`) — as built
 
-### 2.6 DCL (`/src/zi_hr360_*.dcls.asdcls`)
+Three pools (one per interface BDEF that needs handlers):
 
-`ZI_HR360_EMPLOYEE_DCL` + companion roles for each independently exposed child
-interface view (Doc 05 §7).
+- `ZBP_HR360_EMPLOYEE` — `lhc_employee` (read, 12× `rba_*`, global + instance
+  `P_ORGIN` authorization) and `lhc_child_reader` (read for the 8 composition
+  children)
+- `ZBP_HR360_TIMELINE` — `lhc_timeline` (read)
+- `ZBP_HR360_ISSUE` — `lhc_issue` (read)
 
-### 2.7 Classes (`/src/zcl_hr360_*` / `zif_hr360_*`)
+`ZI_HR360_ORG_HIER` is a `define hierarchy` entity — READ needs no handler code.
 
-`ZIF_HR360_REPORT_ENGINE`, `ZCL_HR360_REPORT_ENGINE`, `ZCL_HR360_ORG_READER`,
-test classes `ZCL_HR360_ISSUE_TEST`, `ZCL_HR360_EMPLOYEE_TEST`,
-`ZCL_HR360_ORG_READER_TEST`, `ZCL_HR360_REPORT_ENGINE_TEST`.
+### 2.6 DCL (`/src/zi_hr360_*_dcl.dcls.asdcls`) — as built
+
+- `ZI_HR360_EMP_BASIC_DCL`, `ZI_HR360_ORGASSIGN_DCL` — direct `aspect pfcg_auth
+  ( P_ORGIN, PERSA, PERSG, PERSK, INFTY = '0001', AUTHC = 'R' )`
+- `ZI_HR360_EMPLOYEE_DCL` — `inheriting conditions from entity ZI_HR360_EMP_BASIC`
+- `ZI_HR360_{PERSONAL,EDUCATION,QUALIF,LEAVE,ATTENDANCE,PAYROLL,DOCUMENT}_DCL` —
+  `inheriting conditions from entity ZI_HR360_EMPLOYEE`
+- `ZI_HR360_EMP_CONTACT` / `_BANK` / `_PAY`, `ZI_HR360_ISSUE`, `ZI_HR360_TIMELINE`
+  — `#NOT_REQUIRED` (filter inherited via the view they are selected from / RBA
+  only). Explicit DCL for `TIMELINE` is BUGS_AND_ISSUES #001.
+
+### 2.7 Classes (`/src/zcl_hr360_*` / `zif_hr360_*`) — as built
+
+`ZIF_HR360_REPORT_ENGINE` (local types, no custom DDIC), `ZCL_HR360_REPORT_ENGINE`,
+`ZCL_HR360_ORG_READER`, and the ABAP Unit class `ZCL_HR360_ISSUE_TEST` (CDS Test
+Double Framework, one method per check branch). The additional test classes named
+in Doc 11 (`ZCL_HR360_EMPLOYEE_TEST`, `_ORG_READER_TEST`, `_REPORT_ENGINE_TEST`)
+are follow-on work — not in the initial push.
 
 ### 2.8 Reports (`/src/zhr360_r_*.prog.abap`)
 
@@ -78,6 +97,7 @@ implementer, not shipped in the repo** (per project note).
 
 ### 2.10 Other
 
+Package `ZHR_UTIL` (`/src/package.devc.xml` — description only).
 Message class `ZMSG_HR360` (`/src/zmsg_hr360.msag.xml`).
 Application Log object `ZHR360` — **created manually via SLG0** (not
 transportable as source in the same way; see §7).
@@ -110,8 +130,10 @@ from the service). The freestyle org-tree section files are provided under
 
 1. **Unmanaged read-only RAP** — root not 1:1 with a table; no persistence to
    manage. Read handlers are single set-based `SELECT`s from the CDS views.
-2. **Children as CDS associations** exposed in the behavior (not compositions)
-   — matches the approved HR DQ PoC; sufficient for read + Object-Page facets.
+2. **Child detail entities as compositions of the root** (Personal, OrgAssignment,
+   Education, Qualification, LeaveBalance, Attendance, PayrollItem, Document) — one
+   BDEF + one behavior pool for the whole tree. `Timeline` / `DataQualityIssue`
+   stay association-linked with their own BDEF (derived UNION views, PoC pattern).
 3. **Check framework in pure CDS** — the PoC's catalog table is removed;
    `CheckID/Category/Severity/Description` are CDS literals in each `ZI_HR360_ISSUE`
    UNION branch. Active-branch count is a CDS constant driving `CompletenessPercent`.
@@ -149,14 +171,14 @@ materialising the issue view via a scheduled snapshot report — both additive.
 - CDS/RAP read errors surface through standard RAP `reported`/`failed`
   structures; no custom exception flow (nothing is written).
 - `ZCL_HR360_ORG_READER` raises `ZCX_HR360` *(local exception class; if a
-  transportable exception class is preferred it is `ZCX_HR360` in `Z001` — no
+  transportable exception class is preferred it is `ZCX_HR360` in `ZHR_UTIL` — no
   DDIC involved)* on unresolvable hierarchy input, caught and logged by callers.
 
 ---
 
 ## 7. Deployment Steps (implementer)
 
-1. **abapGit:** clone the repo, map package to **`Z001`**, pull.
+1. **abapGit:** clone the repo, map package to **`ZHR_UTIL`**, pull.
 2. Resolve activation order — see repo `README.md` §"Activation order"
    (CDS leaves → derived → root → BDEF → behavior pools → projections → MDE →
    service → classes → reports).

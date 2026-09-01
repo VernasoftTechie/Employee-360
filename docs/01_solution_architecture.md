@@ -2,12 +2,14 @@
 
 **Project:** HR Employee 360 — complete employee profile in one Fiori application
 **Repository:** https://github.com/VernasoftTechie/Employee-360.git
-**Status:** DRAFT (rev 2) — awaiting architecture approval before any ABAP is written
-(Rulebook §8: *"Never generate implementation before architecture approval"*).
+**Status:** APPROVED (rev 3). Docs 02–13 approved; `/src` built and pushed
+(see `12_version_history.md`).
 
-**Rev 2 changes:** standard tables only — **zero custom DDIC objects**
-(no `ZT_HR360_CHECK_CAT`, no `ZT_HR360_CERT`); ABAP package = **`Z001`**
-(existing, assigned by you on abapGit pull).
+**Rev 2:** standard tables only — **zero custom DDIC objects**
+(no `ZT_HR360_CHECK_CAT`, no `ZT_HR360_CERT`).
+**Rev 3:** ABAP package = **`ZHR_UTIL`** — every repo object belongs to this one
+package; `src/package.devc.xml` carries its description, the repo is linked to
+`ZHR_UTIL` in abapGit on pull (no sub-packages).
 
 ---
 
@@ -355,7 +357,7 @@ framework is entirely in CDS (§6).
 | Reports | `ZHR360_R_*` |
 | Message class | `ZMSG_HR360` (repository object, not a data table — required by Rulebook §6) |
 | Application Log object | `ZHR360` (created by you via SLG0 — config, not a custom table) |
-| Package | **`Z001`** (existing) — assigned by you in abapGit on pull; not created here |
+| Package | **`ZHR_UTIL`** — single package for every repo object; `src/package.devc.xml` holds its description, repo linked to `ZHR_UTIL` in abapGit on pull |
 
 ---
 
@@ -365,8 +367,9 @@ framework is entirely in CDS (§6).
 `/.abapgit.xml` (`STARTING_FOLDER=/src/`, `FOLDER_LOGIC=PREFIX`,
 `MASTER_LANGUAGE=E`), all objects under `/src` as serialized abapGit files
 (`*.ddls.asddls` + `.xml`, `*.clas.abap` + `.xml`, `*.srvd.asrvd`, `*.msag.xml`,
-etc.), documentation under `/docs`. You map all objects to package **`Z001`** on
-pull. With zero custom DDIC there are **no `*.tabl.xml`** files.
+etc.), plus `src/package.devc.xml` for the single package. You link the repo to
+package **`ZHR_UTIL`** on pull. With zero custom DDIC there are **no `*.tabl.xml`**
+files.
 
 Caveat to confirm you accept: the RAP behavior-pool classes are shipped as
 abapGit-serialized files, but on first `abapGit pull` into a system the
@@ -425,7 +428,7 @@ docs/
 **Settled (rev 2):**
 - Standard SAP tables only — zero custom DDIC (no check-catalog table, no
   certification table). Check framework fully in CDS (§6).
-- Package `Z001` (existing), assigned on abapGit pull.
+- Package `ZHR_UTIL` — single package for all objects (rev 3); repo linked to it on abapGit pull.
 - Skills + Certifications merged into one `_Qualification` child on PA0024.
 - Read-only unmanaged non-draft BO; HR-admin persona; `P_ORGIN` AUTHC=R.
 - Reuse & rename the PoC's employee interface views + issue framework + KPI
