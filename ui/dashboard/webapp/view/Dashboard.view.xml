@@ -1,0 +1,180 @@
+<mvc:View
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.f"
+  xmlns:card="sap.f.cards"
+  xmlns:l="sap.ui.layout"
+  xmlns:viz="sap.viz.ui5.controls"
+  xmlns:vizData="sap.viz.ui5.data"
+  xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds"
+  controllerName="hr360.datahealth.controller.Dashboard"
+  displayBlock="true">
+
+  <Page id="page" class="dhPage" title="{i18n>pageTitle}" showHeader="true">
+    <headerContent>
+      <Button icon="sap-icon://refresh" tooltip="{i18n>refresh}" press=".onRefresh"/>
+    </headerContent>
+
+    <content>
+      <MessageStrip
+        id="errStrip"
+        visible="false"
+        type="Warning"
+        showIcon="true"
+        class="sapUiSmallMarginBottom"/>
+
+      <Text text="{i18n>subTitle}" class="sapUiTinyMarginBottom"/>
+
+      <!-- KPI strip -->
+      <l:Grid id="kpiGrid" defaultSpan="XL3 L3 M6 S12" hSpacing="1" vSpacing="1" class="sapUiSmallMarginBottom">
+        <f:Card class="dhCard">
+          <f:header>
+            <card:NumericHeader id="kpiTotal" title="{i18n>kpiTotal}" number="{/kpi/total}" scale=""/>
+          </f:header>
+        </f:Card>
+        <f:Card class="dhCard">
+          <f:header>
+            <card:NumericHeader id="kpiCrit" title="{i18n>kpiCritical}" number="{/kpi/critical}" state="Error"
+              subtitle="{/kpi/criticalPct}%"/>
+          </f:header>
+        </f:Card>
+        <f:Card class="dhCard">
+          <f:header>
+            <card:NumericHeader id="kpiWarn" title="{i18n>kpiWarning}" number="{/kpi/warning}" state="Critical"/>
+          </f:header>
+        </f:Card>
+        <f:Card class="dhCard">
+          <f:header>
+            <card:NumericHeader id="kpiClean" title="{i18n>kpiClean}" number="{/kpi/clean}" state="Good"
+              subtitle="{/kpi/cleanPct}%"/>
+          </f:header>
+        </f:Card>
+      </l:Grid>
+
+      <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="1" vSpacing="1">
+
+        <!-- Status donut -->
+        <f:Card class="dhCard">
+          <f:header>
+            <card:Header title="{i18n>cardStatus}" subtitle="{i18n>cardStatusSub}"/>
+          </f:header>
+          <f:content>
+            <viz:VizFrame id="vizStatus" class="dhViz" vizType="donut" uiConfig="{applicationSet:'fiori'}">
+              <viz:dataset>
+                <vizData:FlattenedDataset data="{/status}">
+                  <vizData:dimensions>
+                    <vizData:DimensionDefinition name="Status" value="{name}"/>
+                  </vizData:dimensions>
+                  <vizData:measures>
+                    <vizData:MeasureDefinition name="Employees" value="{value}"/>
+                  </vizData:measures>
+                </vizData:FlattenedDataset>
+              </viz:dataset>
+              <viz:feeds>
+                <vizFeeds:FeedItem uid="size" type="Measure" values="Employees"/>
+                <vizFeeds:FeedItem uid="color" type="Dimension" values="Status"/>
+              </viz:feeds>
+            </viz:VizFrame>
+          </f:content>
+        </f:Card>
+
+        <!-- By check column -->
+        <f:Card class="dhCard">
+          <f:header>
+            <card:Header title="{i18n>cardCheck}" subtitle="{i18n>cardCheckSub}"/>
+          </f:header>
+          <f:content>
+            <viz:VizFrame id="vizCheck" class="dhViz" vizType="column" uiConfig="{applicationSet:'fiori'}">
+              <viz:dataset>
+                <vizData:FlattenedDataset data="{/checks}">
+                  <vizData:dimensions>
+                    <vizData:DimensionDefinition name="Check" value="{name}"/>
+                  </vizData:dimensions>
+                  <vizData:measures>
+                    <vizData:MeasureDefinition name="Employees" value="{value}"/>
+                  </vizData:measures>
+                </vizData:FlattenedDataset>
+              </viz:dataset>
+              <viz:feeds>
+                <vizFeeds:FeedItem uid="valueAxis" type="Measure" values="Employees"/>
+                <vizFeeds:FeedItem uid="categoryAxis" type="Dimension" values="Check"/>
+              </viz:feeds>
+            </viz:VizFrame>
+          </f:content>
+        </f:Card>
+
+        <!-- Org drill -->
+        <f:Card class="dhCard">
+          <f:header>
+            <card:Header title="{i18n>cardOrg}" subtitle="{/org/subtitle}"/>
+          </f:header>
+          <f:content>
+            <VBox>
+              <HBox class="dhBreadcrumb" alignItems="Center">
+                <Breadcrumbs id="orgCrumbs" currentLocationText="{/org/currentText}">
+                  <Link text="{i18n>drillRoot}" press=".onOrgHome"/>
+                </Breadcrumbs>
+                <ToolbarSpacer/>
+                <Button id="orgViewEmps" text="{i18n>viewEmployees}" type="Emphasized"
+                  visible="{/org/canViewEmployees}" press=".onViewEmployees" icon="sap-icon://navigation-right-arrow"/>
+              </HBox>
+              <viz:VizFrame id="vizOrg" class="dhViz" vizType="bar" uiConfig="{applicationSet:'fiori'}"
+                selectData=".onOrgBarSelect">
+                <viz:dataset>
+                  <vizData:FlattenedDataset data="{/org/rows}">
+                    <vizData:dimensions>
+                      <vizData:DimensionDefinition name="Node" value="{label}"/>
+                    </vizData:dimensions>
+                    <vizData:measures>
+                      <vizData:MeasureDefinition name="Completeness %" value="{completeness}"/>
+                      <vizData:MeasureDefinition name="Critical issues" value="{critical}"/>
+                    </vizData:measures>
+                  </vizData:FlattenedDataset>
+                </viz:dataset>
+                <viz:feeds>
+                  <vizFeeds:FeedItem uid="valueAxis" type="Measure" values="Completeness %"/>
+                  <vizFeeds:FeedItem uid="categoryAxis" type="Dimension" values="Node"/>
+                </viz:feeds>
+              </viz:VizFrame>
+            </VBox>
+          </f:content>
+        </f:Card>
+
+        <!-- Detail table -->
+        <f:Card class="dhCard">
+          <f:header>
+            <card:Header title="{i18n>cardDetail}" subtitle="{i18n>cardDetailSub}"/>
+          </f:header>
+          <f:content>
+            <Table id="detailTable" items="{/detail}" growing="true" growingThreshold="15" mode="None">
+              <columns>
+                <Column><Text text="Company"/></Column>
+                <Column><Text text="Pers. area"/></Column>
+                <Column><Text text="Org unit"/></Column>
+                <Column><Text text="Status"/></Column>
+                <Column hAlign="End"><Text text="Employees"/></Column>
+                <Column hAlign="End"><Text text="Critical"/></Column>
+                <Column hAlign="End"><Text text="Compl. %"/></Column>
+              </columns>
+              <items>
+                <ColumnListItem type="Active" press=".onDetailRowPress">
+                  <cells>
+                    <Text text="{CompanyCode}"/>
+                    <Text text="{PersonnelArea}"/>
+                    <Text text="{OrgUnit}"/>
+                    <ObjectStatus text="{QualityStatus}" state="{= ${QualityStatus} === 'CRITICAL' ? 'Error' : ${QualityStatus} === 'WARNING' ? 'Warning' : 'Success' }"/>
+                    <Text text="{EmployeeCount}"/>
+                    <Text text="{CriticalCount}"/>
+                    <Text text="{AvgCompleteness}"/>
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </f:content>
+        </f:Card>
+
+      </l:Grid>
+    </content>
+  </Page>
+</mvc:View>

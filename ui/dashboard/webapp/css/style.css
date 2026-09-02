@@ -1,0 +1,36 @@
+.dhPage .sapMPageHeader { box-shadow: none; }
+
+.dhKpiStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.5rem 0 1rem;
+}
+.dhKpi {
+  flex: 1 1 190px;
+  min-width: 170px;
+  background: var(--sapTile_Background, #fff);
+  border: 1px solid var(--sapTile_SeparatorColor, #e5e5e5);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+.dhKpi .dhKpiLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sapContent_LabelColor, #6a6d70);
+}
+.dhKpi .dhKpiValue {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.15;
+  font-feature-settings: "tnum";
+}
+.dhKpi .dhKpiSub { font-size: 0.8rem; color: var(--sapContent_LabelColor, #6a6d70); }
+.dhKpi.dhCrit .dhKpiValue { color: var(--sapNegativeColor, #bb0000); }
+.dhKpi.dhWarn .dhKpiValue { color: var(--sapCriticalColor, #e76500); }
+.dhKpi.dhOk   .dhKpiValue { color: var(--sapPositiveColor, #256f3a); }
+
+.dhCard { margin: 0 0 1rem; }
+.dhViz { height: 300px; width: 100%; }
+.dhBreadcrumb { padding: 0.25rem 0 0.5rem; }

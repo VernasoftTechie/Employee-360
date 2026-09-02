@@ -1,0 +1,14 @@
+{
+  "name": "hr360-datahealth",
+  "version": "1.0.0",
+  "description": "Employee Data Health dashboard (SAPUI5 freestyle)",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve --open index.html",
+    "build": "ui5 build --clean-dest"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^3",
+    "@sap/ux-ui5-tooling": "^1"
+  }
+}
