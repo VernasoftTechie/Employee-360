@@ -13,7 +13,8 @@ define view entity ZC_HR360_ISSUE
       @UI.selectionField: [{ position: 10 }]
   key EmployeeID,
 
-      @UI.lineItem: [{ position: 20 }]
+      @UI.lineItem:       [{ position: 20 }]
+      @UI.identification: [{ position: 20 }]
   key CheckID,
 
       @UI.lineItem:      [{ position: 30 }]
@@ -25,9 +26,11 @@ define view entity ZC_HR360_ISSUE
 
       SeverityCriticality,
 
-      @UI.lineItem: [{ position: 50 }]
+      @UI.lineItem:       [{ position: 50 }]
+      @UI.identification: [{ position: 50 }]
       IssueDescription,
 
-      @UI.lineItem: [{ position: 60 }]
+      @UI.lineItem:       [{ position: 60 }]
+      @UI.identification: [{ position: 60 }]
       FieldName
 }

@@ -5,13 +5,16 @@
 @UI.headerInfo: {
   typeName: 'Employee',
   typeNamePlural: 'Employees',
-  title: { type: #STANDARD, value: 'FormattedName' },
+  title:       { type: #STANDARD, value: 'FormattedName' },
   description: { type: #STANDARD, value: 'EmployeeID' }
 }
+@UI.presentationVariant: [{
+  sortOrder:      [{ by: 'CompletenessPercent', direction: #ASC }],
+  visualizations: [{ type: #AS_LINEITEM }]
+}]
 
-// Read-only query view. UI annotations are inline for now (rulebook wants a
-// Metadata Extension - moves there once abapGit DDLX format is confirmed;
-// BUILD_ISSUES_LOG.md A25).
+// Read-only query view. UI annotations inline for now (Rulebook wants a
+// Metadata Extension - BUILD_ISSUES_LOG.md A25).
 
 define view entity ZC_HR360_EMPLOYEE
   as select from ZI_HR360_EMPLOYEE
@@ -27,23 +30,28 @@ define view entity ZC_HR360_EMPLOYEE
 
 {
       @UI.facet: [
-        { id: 'Header',      purpose: #HEADER,   type: #IDENTIFICATION_REFERENCE,                                     label: 'Employee',       position: 10 },
-        { id: 'Education',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Education',    label: 'Education',       position: 20 },
-        { id: 'Skills',       purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Qualification', label: 'Skills & Certs', position: 30 },
-        { id: 'Leave',        purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_LeaveBalance',  label: 'Leave & Quotas', position: 40 },
-        { id: 'Attendance',   purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Attendance',    label: 'Attendance',     position: 50 },
-        { id: 'Payroll',      purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Payroll',       label: 'Pay History',    position: 60 },
-        { id: 'Documents',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Document',      label: 'Documents',      position: 70 },
-        { id: 'Timeline',     purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Timeline',      label: 'Timeline',       position: 80 },
-        { id: 'DataQuality',  purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_DataQuality',   label: 'Data Quality',   position: 90 }
+        { id: 'CompletenessKpi', purpose: #HEADER, type: #DATAPOINT_REFERENCE, targetQualifier: 'Completeness', position: 10 },
+        { id: 'IssuesKpi',       purpose: #HEADER, type: #DATAPOINT_REFERENCE, targetQualifier: 'OpenIssues',   position: 20 },
+        { id: 'CriticalKpi',     purpose: #HEADER, type: #DATAPOINT_REFERENCE, targetQualifier: 'Critical',     position: 30 },
+        { id: 'StatusKpi',       purpose: #HEADER, type: #DATAPOINT_REFERENCE, targetQualifier: 'Status',       position: 40 },
+
+        { id: 'Header',      purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE,                                 label: 'Employee',        position: 10 },
+        { id: 'Education',   purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Education',     label: 'Education',        position: 20 },
+        { id: 'Skills',      purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Qualification', label: 'Skills & Certs',  position: 30 },
+        { id: 'Leave',       purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_LeaveBalance',  label: 'Leave & Quotas',  position: 40 },
+        { id: 'Attendance',  purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Attendance',    label: 'Attendance',      position: 50 },
+        { id: 'Payroll',     purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Payroll',       label: 'Pay History',     position: 60 },
+        { id: 'Documents',   purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Document',      label: 'Documents',       position: 70 },
+        { id: 'Timeline',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Timeline',      label: 'Timeline',        position: 80 },
+        { id: 'DataQuality', purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_DataQuality',   label: 'Data Quality',    position: 90 }
       ]
 
-      @UI.lineItem:      [{ position: 10 }]
+      @UI.lineItem:       [{ position: 10 }]
       @UI.identification: [{ position: 10 }]
   key EmployeeID,
 
       @Search.defaultSearchElement: true
-      @UI.lineItem:      [{ position: 20 }]
+      @UI.lineItem:       [{ position: 20 }]
       @UI.identification: [{ position: 20 }]
       LastName,
 
@@ -63,12 +71,12 @@ define view entity ZC_HR360_EMPLOYEE
       @UI.identification: [{ position: 70 }]
       HireDate,
 
-      @UI.lineItem:      [{ position: 30 }]
+      @UI.lineItem:       [{ position: 30 }]
       @UI.selectionField: [{ position: 10 }]
       @UI.identification: [{ position: 80 }]
       CompanyCode,
 
-      @UI.lineItem:      [{ position: 40 }]
+      @UI.lineItem:       [{ position: 40 }]
       @UI.selectionField: [{ position: 20 }]
       @UI.identification: [{ position: 90 }]
       PersonnelArea,
@@ -82,7 +90,7 @@ define view entity ZC_HR360_EMPLOYEE
       EmployeeSubgroup,
 
       @Search.defaultSearchElement: true
-      @UI.lineItem:      [{ position: 50 }]
+      @UI.lineItem:       [{ position: 50 }]
       @UI.selectionField: [{ position: 40 }]
       @UI.identification: [{ position: 110 }]
       OrgUnit,
@@ -106,24 +114,34 @@ define view entity ZC_HR360_EMPLOYEE
       MobileNumber,
       IBAN,
 
-      @UI.lineItem:      [{ position: 60 }]
-      @UI.identification: [{ position: 180 }]
+      @UI.dataPoint: { qualifier: 'OpenIssues', title: 'Open Issues' }
+      @UI.lineItem:  [{ position: 60 }]
       TotalIssueCount,
 
-      @UI.lineItem: [{ position: 70 }]
+      @UI.dataPoint: { qualifier: 'Critical', title: 'Critical Issues', criticality: 'QualityStatusCriticality' }
+      @UI.lineItem:  [{ position: 70 }]
       CriticalIssueCount,
 
+      @UI.lineItem: [{ position: 75 }]
       WarningIssueCount,
 
-      @UI.lineItem:      [{ position: 80, criticality: 'QualityStatusCriticality' }]
+      @UI.dataPoint: { qualifier: 'Status', title: 'Data Quality', criticality: 'QualityStatusCriticality' }
+      @UI.lineItem:       [{ position: 80, criticality: 'QualityStatusCriticality' }]
       @UI.selectionField: [{ position: 50 }]
       @UI.identification: [{ position: 190, criticality: 'QualityStatusCriticality' }]
       QualityStatus,
 
       QualityStatusCriticality,
 
-      @UI.lineItem:      [{ position: 90 }]
-      @UI.identification: [{ position: 200 }]
+      @UI.dataPoint: {
+        qualifier:     'Completeness',
+        title:         'Data Completeness',
+        targetValue:   100,
+        criticality:   'QualityStatusCriticality',
+        visualization: #PROGRESS
+      }
+      @UI.lineItem:       [{ position: 90, type: #AS_DATAPOINT }]
+      @UI.identification: [{ position: 200, type: #AS_DATAPOINT }]
       CompletenessPercent,
 
       _Education,
