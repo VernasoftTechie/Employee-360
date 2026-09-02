@@ -1,0 +1,17 @@
+{
+  "BASEINFO": {
+    "FROM": [
+      "ZI_HR360_EMPLOYEE"
+    ],
+    "ASSOCIATED": [
+      "ZC_HR360_ATTENDANCE",
+      "ZC_HR360_DOCUMENT",
+      "ZC_HR360_EDUCATION",
+      "ZC_HR360_ISSUE",
+      "ZC_HR360_LEAVE",
+      "ZC_HR360_PAYROLL",
+      "ZC_HR360_QUALIF",
+      "ZC_HR360_TIMELINE"
+    ]
+  }
+}

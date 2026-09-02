@@ -1,0 +1,8 @@
+{
+  "BASEINFO": {
+    "FROM": [
+      "ZI_HR360_EMP_BASIC",
+      "ZI_HR360_ISSUE"
+    ]
+  }
+}

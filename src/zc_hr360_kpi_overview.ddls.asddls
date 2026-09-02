@@ -13,46 +13,50 @@
   visualizations: [{ type: #AS_CHART, qualifier: 'ByStatus' }, { type: #AS_LINEITEM }]
 }]
 
-// Plain pre-aggregated view (grain = company / pers.area / EE group / org unit /
-// status). No @Analytics.query - kept simple after earlier analytical-query
-// activation trouble (BUILD_ISSUES_LOG.md A18). Fiori still renders @UI.chart
-// from the pre-grouped rows.
+// Aggregated straight from the flat EMP_BASIC + EMP_KPI join (same pattern the
+// executable reports use). Selecting from the fat ZI_HR360_EMPLOYEE and
+// re-aggregating dumped at runtime (BUILD_ISSUES_LOG.md A28).
 
 define view entity ZC_HR360_KPI_OVERVIEW
-  as select from ZI_HR360_EMPLOYEE
+  as select from ZI_HR360_EMP_BASIC as b
+    inner join ZI_HR360_EMP_KPI as k on k.EmployeeID = b.EmployeeID
 {
       @UI.lineItem:       [{ position: 10 }]
       @UI.selectionField: [{ position: 10 }]
-  key CompanyCode                                        as CompanyCode,
+  key b.CompanyCode                                              as CompanyCode,
       @UI.lineItem:       [{ position: 20 }]
       @UI.selectionField: [{ position: 20 }]
-  key PersonnelArea                                      as PersonnelArea,
+  key b.PersonnelArea                                            as PersonnelArea,
       @UI.lineItem:       [{ position: 30 }]
       @UI.selectionField: [{ position: 30 }]
-  key EmployeeGroup                                      as EmployeeGroup,
+  key b.EmployeeGroup                                            as EmployeeGroup,
       @UI.lineItem:       [{ position: 40 }]
       @UI.selectionField: [{ position: 40 }]
-  key OrgUnit                                            as OrgUnit,
+  key b.OrgUnit                                                  as OrgUnit,
       @UI.lineItem:       [{ position: 50 }]
       @UI.selectionField: [{ position: 50 }]
-  key QualityStatus                                     as QualityStatus,
+  key case when k.CriticalIssueCount > 0 then 'CRITICAL'
+           when k.TotalIssueCount    > 0 then 'WARNING'
+           else 'OK' end                                         as QualityStatus,
 
       @UI.lineItem: [{ position: 60 }]
-      count( * )                                         as EmployeeCount,
+      count( * )                                                 as EmployeeCount,
       @UI.lineItem: [{ position: 70 }]
-      sum( case when TotalIssueCount > 0 then 1 else 0 end ) as EmployeesWithIssues,
+      sum( case when k.TotalIssueCount > 0 then 1 else 0 end )    as EmployeesWithIssues,
       @UI.lineItem: [{ position: 80 }]
-      sum( TotalIssueCount )                             as MissingDataCount,
+      sum( k.TotalIssueCount )                                    as MissingDataCount,
       @UI.lineItem: [{ position: 90 }]
-      sum( CriticalIssueCount )                          as CriticalCount,
+      sum( k.CriticalIssueCount )                                 as CriticalCount,
       @UI.lineItem: [{ position: 100 }]
-      sum( WarningIssueCount )                           as WarningCount,
+      sum( k.WarningIssueCount )                                  as WarningCount,
       @UI.lineItem: [{ position: 110 }]
-      avg( CompletenessPercent as abap.dec( 5, 1 ) )     as AvgCompleteness
+      avg( division( ( 12 - k.TotalIssueCount ) * 100, 12, 2 ) as abap.dec( 16, 2 ) ) as AvgCompleteness
 }
 group by
-  CompanyCode,
-  PersonnelArea,
-  EmployeeGroup,
-  OrgUnit,
-  QualityStatus
+  b.CompanyCode,
+  b.PersonnelArea,
+  b.EmployeeGroup,
+  b.OrgUnit,
+  case when k.CriticalIssueCount > 0 then 'CRITICAL'
+       when k.TotalIssueCount    > 0 then 'WARNING'
+       else 'OK' end

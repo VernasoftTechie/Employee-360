@@ -1,0 +1,12 @@
+{
+  "BASEINFO": {
+    "FROM": [
+      "ZI_HR360_EMP_BASIC",
+      "ZI_HR360_EMP_PAY",
+      "ZI_HR360_EMP_CONTACT",
+      "ZI_HR360_EMP_BANK",
+      "ZI_HR360_EDUCATION",
+      "ZI_HR360_QUALIF"
+    ]
+  }
+}
