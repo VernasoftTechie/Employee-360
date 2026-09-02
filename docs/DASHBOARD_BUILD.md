@@ -4,7 +4,6 @@ The backend is done — these entity sets are live in `ZHR360_UI_SRVD`:
 
 | Entity set | Grain | For |
 |---|---|---|
-| `Headline` | 1 row (grand total) | KPI number tiles: `TotalEmployees`, `CriticalEmployees`, `EmployeesWithIssues`, `CleanEmployees`, `AvgCompleteness`, `CleanPercent` |
 | `StatusSplit` | per `QualityStatus` (3 rows) | **donut** — workforce by status |
 | `CheckFailure` | per `CheckID` (≤12 rows) | **column** — where the data breaks |
 | `AreaHealth` | per company / personnel area | **bar** — avg completeness by area |

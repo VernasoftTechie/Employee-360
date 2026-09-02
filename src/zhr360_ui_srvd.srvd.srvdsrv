@@ -11,7 +11,6 @@ define service ZHR360_UI_SRVD {
   expose ZC_HR360_ISSUE        as DataQualityIssue;
   expose ZC_HR360_KPI_OVERVIEW as KpiOverview;
   expose ZC_HR360_DQ_BYCHECK   as CheckFailure;
-  expose ZC_HR360_KPI_HEADLINE as Headline;
   expose ZC_HR360_DQ_BY_STATUS as StatusSplit;
   expose ZC_HR360_DQ_BY_AREA   as AreaHealth;
 }
