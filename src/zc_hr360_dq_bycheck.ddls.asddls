@@ -11,23 +11,20 @@
   visualizations: [{ type: #AS_CHART, qualifier: 'ByCheck' }, { type: #AS_LINEITEM }]
 }]
 
-// Plain pre-aggregated: one row per data-quality check with the number of
-// employees failing it. Feeds the "where the data breaks" chart.
-
 define view entity ZC_HR360_DQ_BYCHECK
   as select from ZI_HR360_ISSUE
 {
       @UI.lineItem:       [{ position: 10 }]
       @UI.selectionField: [{ position: 10 }]
-  key CheckID                as CheckID,
+  key CheckID                                        as CheckID,
       @UI.lineItem:       [{ position: 20 }]
       @UI.selectionField: [{ position: 20 }]
-  key Category               as Category,
+  key Category                                       as Category,
       @UI.lineItem:       [{ position: 30 }]
-  key Severity               as Severity,
-      max( SeverityCriticality ) as SeverityCriticality,
+  key Severity                                       as Severity,
+      cast( max( SeverityCriticality ) as abap.int4 ) as SeverityCriticality,
       @UI.lineItem: [{ position: 40 }]
-      count( * )              as FailureCount
+      cast( count( * ) as abap.int4 )                as FailureCount
 }
 group by
   CheckID,

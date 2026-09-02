@@ -13,9 +13,10 @@
   visualizations: [{ type: #AS_CHART, qualifier: 'ByStatus' }, { type: #AS_LINEITEM }]
 }]
 
-// Aggregated straight from the flat EMP_BASIC + EMP_KPI join (same pattern the
-// executable reports use). Selecting from the fat ZI_HR360_EMPLOYEE and
-// re-aggregating dumped at runtime (BUILD_ISSUES_LOG.md A28).
+// Aggregated from the flat EMP_BASIC join EMP_KPI. All measures explicitly cast
+// (HANA sum/avg return wide types SADL can't map -> RAISE_SHORTDUMP, A28).
+// QualityStatus is a plain field from EMP_KPI, so it groups cleanly (A29: a CASE
+// expression cannot be a key element / group-by term here).
 
 define view entity ZC_HR360_KPI_OVERVIEW
   as select from ZI_HR360_EMP_BASIC as b
@@ -23,40 +24,37 @@ define view entity ZC_HR360_KPI_OVERVIEW
 {
       @UI.lineItem:       [{ position: 10 }]
       @UI.selectionField: [{ position: 10 }]
-  key b.CompanyCode                                              as CompanyCode,
+  key b.CompanyCode                                                     as CompanyCode,
       @UI.lineItem:       [{ position: 20 }]
       @UI.selectionField: [{ position: 20 }]
-  key b.PersonnelArea                                            as PersonnelArea,
+  key b.PersonnelArea                                                   as PersonnelArea,
       @UI.lineItem:       [{ position: 30 }]
       @UI.selectionField: [{ position: 30 }]
-  key b.EmployeeGroup                                            as EmployeeGroup,
+  key b.EmployeeGroup                                                   as EmployeeGroup,
       @UI.lineItem:       [{ position: 40 }]
       @UI.selectionField: [{ position: 40 }]
-  key b.OrgUnit                                                  as OrgUnit,
+  key b.OrgUnit                                                         as OrgUnit,
       @UI.lineItem:       [{ position: 50 }]
       @UI.selectionField: [{ position: 50 }]
-  key case when k.CriticalIssueCount > 0 then 'CRITICAL'
-           when k.TotalIssueCount    > 0 then 'WARNING'
-           else 'OK' end                                         as QualityStatus,
+  key k.QualityStatus                                                   as QualityStatus,
 
       @UI.lineItem: [{ position: 60 }]
-      count( * )                                                 as EmployeeCount,
+      cast( count( * ) as abap.int4 )                                   as EmployeeCount,
       @UI.lineItem: [{ position: 70 }]
-      sum( case when k.TotalIssueCount > 0 then 1 else 0 end )    as EmployeesWithIssues,
+      cast( sum( case when k.TotalIssueCount > 0 then 1 else 0 end ) as abap.int4 ) as EmployeesWithIssues,
       @UI.lineItem: [{ position: 80 }]
-      sum( k.TotalIssueCount )                                    as MissingDataCount,
+      cast( sum( k.TotalIssueCount ) as abap.int4 )                     as MissingDataCount,
       @UI.lineItem: [{ position: 90 }]
-      sum( k.CriticalIssueCount )                                 as CriticalCount,
+      cast( sum( k.CriticalIssueCount ) as abap.int4 )                  as CriticalCount,
       @UI.lineItem: [{ position: 100 }]
-      sum( k.WarningIssueCount )                                  as WarningCount,
+      cast( sum( k.WarningIssueCount ) as abap.int4 )                   as WarningCount,
       @UI.lineItem: [{ position: 110 }]
-      avg( division( ( 12 - k.TotalIssueCount ) * 100, 12, 2 ) as abap.dec( 16, 2 ) ) as AvgCompleteness
+      cast( division( sum( 12 - k.TotalIssueCount ) * 100,
+                      count( * ) * 12, 2 ) as abap.dec( 6, 2 ) )        as AvgCompleteness
 }
 group by
   b.CompanyCode,
   b.PersonnelArea,
   b.EmployeeGroup,
   b.OrgUnit,
-  case when k.CriticalIssueCount > 0 then 'CRITICAL'
-       when k.TotalIssueCount    > 0 then 'WARNING'
-       else 'OK' end
+  k.QualityStatus
