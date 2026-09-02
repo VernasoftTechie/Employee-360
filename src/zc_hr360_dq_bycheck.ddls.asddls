@@ -1,10 +1,13 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'HR360 - DQ by Check'
 @Metadata.allowExtensions: true
+@Analytics.query: true
+@ObjectModel.usageType: { serviceQuality: #A, sizeCategory: #S, dataClass: #MIXED }
 @UI.headerInfo: { typeName: 'Check', typeNamePlural: 'Data Quality Checks' }
 @UI.chart: [{
   qualifier: 'ByCheck', chartType: #COLUMN,
-  dimensions: [ 'CheckID' ], measures: [ 'FailureCount' ]
+  dimensions: [ 'CheckID' ], measures: [ 'FailureCount' ],
+  measureAttributes: [{ measure: 'FailureCount', role: #AXIS_1 }]
 }]
 @UI.presentationVariant: [{
   sortOrder: [{ by: 'FailureCount', direction: #DESC }],
@@ -16,17 +19,16 @@ define view entity ZC_HR360_DQ_BYCHECK
 {
       @UI.lineItem:       [{ position: 10 }]
       @UI.selectionField: [{ position: 10 }]
-  key CheckID                                        as CheckID,
+      @AnalyticsDetails.query.axis: #ROWS
+      CheckID,
       @UI.lineItem:       [{ position: 20 }]
       @UI.selectionField: [{ position: 20 }]
-  key Category                                       as Category,
-      @UI.lineItem:       [{ position: 30 }]
-  key Severity                                       as Severity,
-      cast( max( SeverityCriticality ) as abap.int4 ) as SeverityCriticality,
+      @AnalyticsDetails.query.axis: #ROWS
+      Category,
+      @UI.lineItem: [{ position: 30 }]
+      @AnalyticsDetails.query.axis: #FREE
+      Severity,
       @UI.lineItem: [{ position: 40 }]
-      cast( count( * ) as abap.int4 )                as FailureCount
+      @DefaultAggregation: #SUM
+      cast( 1 as abap.int4 )                as FailureCount
 }
-group by
-  CheckID,
-  Category,
-  Severity
