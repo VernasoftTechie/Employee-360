@@ -1,0 +1,99 @@
+{
+  "_version": "1.59.0",
+  "sap.app": {
+    "id": "hr360.datahealth",
+    "type": "application",
+    "title": "Employee Data Health",
+    "description": "HR-wide employee data-quality dashboard",
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata4/sap/zhr360_ui_srvb_o4/srvd/sap/zhr360_ui_srvd/0001/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.108.0",
+      "libs": { "sap.ovp": {}, "sap.ui.core": {}, "sap.m": {}, "sap.ui.comp": {}, "sap.suite.ui.commons": {} }
+    },
+    "models": {
+      "": {
+        "dataSource": "mainService",
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "i18n": { "type": "sap.ui.model.resource.ResourceModel", "uri": "i18n/i18n.properties" }
+    },
+    "extends": { "extensions": {} },
+    "contentDensities": { "compact": true, "cozy": true },
+    "rootView": { "viewName": "sap.ovp.app.Main", "type": "XML", "async": true, "id": "app" }
+  },
+  "sap.ovp": {
+    "globalFilterModel": "",
+    "globalFilterEntityType": "KpiOverviewType",
+    "enableLiveFilter": true,
+    "considerAnalyticalParameters": false,
+    "containerLayout": "resizable",
+    "cards": {
+
+      "card_status": {
+        "model": "",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "Workforce by data-quality status",
+          "subTitle": "Employees per status",
+          "entitySet": "StatusSplit",
+          "chartAnnotationPath": "@com.sap.vocabularies.UI.v1.Chart#S",
+          "presentationAnnotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant",
+          "navigation": "chartNav",
+          "identificationAnnotationPath": "@com.sap.vocabularies.UI.v1.LineItem"
+        }
+      },
+
+      "card_bycheck": {
+        "model": "",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "Where the data breaks",
+          "subTitle": "Employees failing each check",
+          "entitySet": "CheckFailure",
+          "chartAnnotationPath": "@com.sap.vocabularies.UI.v1.Chart#ByCheck",
+          "presentationAnnotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant",
+          "identificationAnnotationPath": "@com.sap.vocabularies.UI.v1.LineItem"
+        }
+      },
+
+      "card_byarea": {
+        "model": "",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "Completeness by organization",
+          "subTitle": "Average completeness % by personnel area",
+          "entitySet": "AreaHealth",
+          "chartAnnotationPath": "@com.sap.vocabularies.UI.v1.Chart#A",
+          "presentationAnnotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant",
+          "identificationAnnotationPath": "@com.sap.vocabularies.UI.v1.LineItem"
+        }
+      },
+
+      "card_detail": {
+        "model": "",
+        "template": "sap.ovp.cards.table",
+        "settings": {
+          "title": "KPI detail",
+          "subTitle": "By company / personnel area / org unit / status",
+          "entitySet": "KpiOverview",
+          "presentationAnnotationPath": "@com.sap.vocabularies.UI.v1.PresentationVariant",
+          "identificationAnnotationPath": "@com.sap.vocabularies.UI.v1.LineItem"
+        }
+      }
+
+    }
+  }
+}
