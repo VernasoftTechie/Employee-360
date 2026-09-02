@@ -2,9 +2,9 @@
   "BASEINFO": {
     "FROM": [
       "ZI_HR360_EMP_BASIC",
-      "ZI_HR360_PERSONAL",
       "ZI_HR360_EMP_KPI",
-      "ZI_HR360_HIREDATE"
+      "ZI_HR360_HIREDATE",
+      "ZI_HR360_PERSONAL"
     ]
   }
 }
