@@ -10,4 +10,5 @@ define service ZHR360_UI_SRVD {
   expose ZC_HR360_TIMELINE     as TimelineEvent;
   expose ZC_HR360_ISSUE        as DataQualityIssue;
   expose ZC_HR360_KPI_OVERVIEW as KpiOverview;
+  expose ZC_HR360_DQ_BYCHECK   as CheckFailure;
 }

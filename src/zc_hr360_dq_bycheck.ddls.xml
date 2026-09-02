@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <DDLS>
-    <DDLNAME>ZC_HR360_KPI_OVERVIEW</DDLNAME>
+    <DDLNAME>ZC_HR360_DQ_BYCHECK</DDLNAME>
     <DDLANGUAGE>E</DDLANGUAGE>
-    <DDTEXT>HR360 - DQ KPI Overview</DDTEXT>
+    <DDTEXT>HR360 - DQ by Check</DDTEXT>
     <SOURCE_TYPE>W</SOURCE_TYPE>
    </DDLS>
   </asx:values>
