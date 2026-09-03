@@ -1,0 +1,127 @@
+{
+  "_version": "1.59.0",
+  "sap.app": {
+    "id": "hr360.employee",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "applicationVersion": { "version": "1.0.0" },
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata4/sap/zhr360_ui_srvb_o4/srvd/sap/zhr360_ui_srvd/0001/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "Employee-display": {
+          "semanticObject": "Employee",
+          "action": "display",
+          "title": "{{appTitle}}",
+          "signature": {
+            "parameters": {
+              "CompanyCode":   { "required": false },
+              "PersonnelArea": { "required": false },
+              "OrgUnit":       { "required": false },
+              "QualityStatus": { "required": false }
+            },
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.108.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": { "bundleName": "hr360.employee.i18n.i18n" }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "resources": { "css": [] },
+    "routing": {
+      "config": {
+        "routerClass": "sap.f.routing.Router",
+        "controlAggregation": "pages",
+        "controlId": "appContent",
+        "transition": "slide",
+        "async": true
+      },
+      "routes": [
+        {
+          "name": "EmployeeList",
+          "pattern": ":?query:",
+          "target": "EmployeeList"
+        },
+        {
+          "name": "EmployeeObjectPage",
+          "pattern": "Employee({key}):?query:",
+          "target": "EmployeeObjectPage"
+        }
+      ],
+      "targets": {
+        "EmployeeList": {
+          "type": "Component",
+          "id": "EmployeeList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/Employee",
+              "variantManagement": "Page",
+              "initialLoad": "Enabled",
+              "navigation": {
+                "Employee": { "detail": { "route": "EmployeeObjectPage" } }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "None",
+                    "condensedTableLayout": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "EmployeeObjectPage": {
+          "type": "Component",
+          "id": "EmployeeObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/Employee",
+              "editableHeaderContent": false,
+              "navigation": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

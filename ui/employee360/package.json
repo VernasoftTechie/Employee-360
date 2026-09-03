@@ -1,7 +1,7 @@
 {
-  "name": "hr360-datahealth",
+  "name": "hr360-employee",
   "version": "1.0.0",
-  "description": "Employee Data Health dashboard",
+  "description": "Employee 360",
   "private": true,
   "scripts": {
     "start": "ui5 serve --open index.html",

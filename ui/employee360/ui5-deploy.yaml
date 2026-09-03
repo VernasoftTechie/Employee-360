@@ -1,0 +1,26 @@
+specVersion: "3.1"
+metadata:
+  name: hr360.employee
+type: application
+builder:
+  resources:
+    excludes:
+      - "/test/**"
+      - "/localService/**"
+  customTasks:
+    - name: deploy-to-abap
+      afterTask: generateCachebusterInfo
+      configuration:
+        target:
+          url: http://REPLACE-WITH-YOUR-S4-HOST:PORT
+          client: "REPLACE-CLIENT"
+        credentials:
+          username: env:ABAP_USER
+          password: env:ABAP_PASSWORD
+        app:
+          name: ZHR360_EMPLOYEE
+          package: ZHR_UTIL
+          transport: REPLACE-WITH-TRANSPORT
+          description: "Employee 360"
+        exclude:
+          - /test/
