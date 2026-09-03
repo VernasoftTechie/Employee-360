@@ -4,8 +4,6 @@
 @UI.headerInfo: { typeName: 'Status', typeNamePlural: 'By Status' }
 @UI.chart: [{ qualifier: 'S', chartType: #DONUT,
   dimensions: [ 'QualityStatus' ], measures: [ 'EmployeeCount' ] }]
-@UI.presentationVariant: [{ sortOrder: [{ by: 'EmployeeCount', direction: #DESC }],
-  visualizations: [{ type: #AS_CHART, qualifier: 'S' }, { type: #AS_LINEITEM }] }]
 
 define view entity ZC_HR360_DQ_BY_STATUS
   as select from ZI_HR360_EMP_BASIC as b

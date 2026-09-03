@@ -8,10 +8,6 @@
   { qualifier: 'ByArea', chartType: #BAR,
     dimensions: [ 'PersonnelArea' ], measures: [ 'AvgCompleteness' ] }
 ]
-@UI.presentationVariant: [{
-  sortOrder: [{ by: 'EmployeeCount', direction: #DESC }],
-  visualizations: [{ type: #AS_CHART, qualifier: 'ByStatus' }, { type: #AS_LINEITEM }]
-}]
 
 // Aggregated from the flat EMP_BASIC join EMP_KPI. All measures explicitly cast
 // (HANA sum/avg return wide types SADL can't map -> RAISE_SHORTDUMP, A28).

@@ -4,8 +4,6 @@
 @UI.headerInfo: { typeName: 'Area', typeNamePlural: 'By Personnel Area' }
 @UI.chart: [{ qualifier: 'A', chartType: #BAR,
   dimensions: [ 'PersonnelArea' ], measures: [ 'AvgCompleteness' ] }]
-@UI.presentationVariant: [{ sortOrder: [{ by: 'AvgCompleteness', direction: #ASC }],
-  visualizations: [{ type: #AS_CHART, qualifier: 'A' }, { type: #AS_LINEITEM }] }]
 
 define view entity ZC_HR360_DQ_BY_AREA
   as select from ZI_HR360_EMP_BASIC as b

@@ -6,10 +6,6 @@
   qualifier: 'ByCheck', chartType: #COLUMN,
   dimensions: [ 'CheckID' ], measures: [ 'FailureCount' ]
 }]
-@UI.presentationVariant: [{
-  sortOrder: [{ by: 'FailureCount', direction: #DESC }],
-  visualizations: [{ type: #AS_CHART, qualifier: 'ByCheck' }, { type: #AS_LINEITEM }]
-}]
 
 define view entity ZC_HR360_DQ_BYCHECK
   as select from ZI_HR360_ISSUE
