@@ -39,12 +39,12 @@ sap.ui.define([
     },
 
     onRefresh: function () {
-      this.getView().getModel().refresh();
+      this.getView().getModel("odata").refresh();
       this._loadAll();
     },
 
     _read: function (sPath, aFilters, iTop) {
-      var oList = this.getView().getModel().bindList(sPath, null, null, aFilters || [], {
+      var oList = this.getView().getModel("odata").bindList(sPath, null, null, aFilters || [], {
         $count: false
       });
       return oList.requestContexts(0, iTop || 2000).then(function (aCtx) {

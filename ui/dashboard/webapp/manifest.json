@@ -35,9 +35,13 @@
     "models": {
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
-        "settings": { "bundleName": "hr360.datahealth.i18n.i18n" }
+        "settings": {
+          "bundleName": "hr360.datahealth.i18n.i18n",
+          "supportedLocales": [ "" ],
+          "fallbackLocale": ""
+        }
       },
-      "": {
+      "odata": {
         "dataSource": "mainService",
         "settings": {
           "synchronizationMode": "None",

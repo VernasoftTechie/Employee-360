@@ -152,3 +152,13 @@ LEVEL NAME TYPE UNION ALL DISTINCT` in various contexts — when in doubt add an
 `identification` / `facet`) + `criticality`. Charts, datapoints, presentation
 variants, micro-charts → add and test one at a time, ideally in a metadata
 extension, not blind in the CDS.
+
+---
+
+## H. Freestyle UI (dashboard app)
+
+| # | Issue | Fix | Commit |
+|---|---|---|---|
+| U1 | 🔴 Dashboard app crashes on load (local `npm start`): `TypeError: oList.requestContexts is not a function` in `Dashboard.controller.js` `_read`; plus `Failed to read path /kpi/total … reading '$kind'` and `/detail/-9007199254740991/… does not point to a property` | **Model naming collision.** `manifest.json` declared the OData V4 model as the **default** (unnamed `""`) model, and `onInit` also did `getView().setModel(this._vm)` — putting the **JSONModel** on the default name. So `getView().getModel()` in `_read` returned the JSONModel → `bindList()` gives a `ClientListBinding` which has no `requestContexts`. The flip side: some XML bindings (`{/kpi/total}`, `{/detail}`) briefly resolved against the OData model → `$kind` / "not a property" errors. | Gave the OData model the name **`odata`** in `manifest.json`; JSONModel stays the default. `_read` + `onRefresh` now call `getModel("odata")`. The `$metadata` request in the HAR returned **304 — the proxy, auth and service were always fine.** | v0.34 |
+| U2 | `i18n/i18n_en_GB.properties` + `i18n_en.properties` → 404 (both apps) | UI5 probes locale-specific bundles before falling back to `i18n.properties`. Only the base bundle exists. Harmless (base bundle loads, 304) but noisy. | Added `supportedLocales: [""]` + `fallbackLocale: ""` to the `i18n` ResourceModel in both `manifest.json` files — UI5 then loads only `i18n.properties`. | v0.34 |
+| — | `Component-preload.js` → 404 on `npm start` | **Expected.** `Component-preload.js` is a build-time bundle; `ui5 serve` serves unbundled source and UI5 loads modules individually. It appears after `npm run build` / `npm run deploy`. Not an error. | — |
