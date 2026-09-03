@@ -9,8 +9,10 @@
   xmlns:vizData="sap.viz.ui5.data"
   xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds"
   controllerName="hr360.datahealth.controller.Dashboard"
+  height="100%"
   displayBlock="true">
 
+  <App id="app">
   <Page id="page" class="dhPage" title="{i18n>pageTitle}" showHeader="true">
     <headerContent>
       <Button icon="sap-icon://refresh" tooltip="{i18n>refresh}" press=".onRefresh"/>
@@ -177,4 +179,5 @@
       </l:Grid>
     </content>
   </Page>
+  </App>
 </mvc:View>
