@@ -3,8 +3,9 @@
 .dhCard { margin: 0 0 1rem; }
 
 /* VizFrame needs an explicit height or it collapses to nothing */
-.dhViz { height: 320px; width: 100%; }
-.dhVizTall { height: 460px; }
+/* width only - VizFrame height is set per chart (fixed for the donut,
+   data-driven for the bar charts so every bar shows in full) */
+.dhViz { width: 100%; }
 
 .dhBreadcrumb { padding: 0.25rem 0 0.5rem; gap: 0.25rem; }
 

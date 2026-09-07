@@ -13,6 +13,11 @@ sap.ui.define([
   function pct(n, d) { return d ? Math.round(n * 1000 / d) / 10 : 0; }
   function round1(x) { return Math.round(x * 10) / 10; }
 
+  // A bar chart must grow with its bar count so every entry shows in full;
+  // ~26px per bar + axis/margin, floored at 300 and capped so the page
+  // stays navigable.
+  function vizHeight(n) { return Math.min(1400, Math.max(300, n * 26 + 64)) + "px"; }
+
   return Controller.extend("hr360.datahealth.controller.Dashboard", {
 
     /* ------------------------------------------------------------------ init */
@@ -28,12 +33,13 @@ sap.ui.define([
         error: "",
         catalogue: [],                   // [{ id, cat, catLabel, name, rule, infotype, sev }]
         checksMode: "check",             // "check" | "category"
+        checksVizHeight: "320px",
         orgMetric: "critPct",            // "critPct" | "critCount" | "completeness"
         kpi:    { total: 0, critical: 0, warning: 0, clean: 0, criticalPct: 0, warningPct: 0, cleanPct: 0, completeness: 0 },
         status: [],
         checks: [],
         detail: [],
-        org: { level: 0, rows: [], subtitle: "", crumbText: "", canViewEmployees: false }
+        org: { level: 0, rows: [], subtitle: "", crumbText: "", canViewEmployees: false, vizHeight: "320px" }
       });
       this.getView().setModel(this._vm);
       this._i18n = this.getView().getModel("i18n").getResourceBundle();
@@ -233,6 +239,7 @@ sap.ui.define([
         return metric === "completeness" ? a.value - b.value : b.value - a.value;   // worst first
       });
       this._vm.setProperty("/org/rows", orgRows);
+      this._vm.setProperty("/org/vizHeight", vizHeight(orgRows.length));
       this._vm.setProperty("/org/level", level);
       this._vm.setProperty("/org/subtitle", this._i18n.getText(
         ["cardOrgSubL0", "cardOrgSubL1", "cardOrgSubL2"][level],
@@ -270,6 +277,7 @@ sap.ui.define([
       rows = rows.filter(function (r) { return r.value > 0; });
       rows.sort(function (a, b) { return b.value - a.value; });
       this._vm.setProperty("/checks", rows);
+      this._vm.setProperty("/checksVizHeight", vizHeight(rows.length));
     },
 
     /* -------------------------------------------------------- interactions */

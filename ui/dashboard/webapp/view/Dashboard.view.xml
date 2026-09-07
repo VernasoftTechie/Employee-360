@@ -101,7 +101,7 @@
               subtitle="{i18n>cardStatusSub} — {i18n>completeness} {/kpi/completeness}%"/>
           </f:header>
           <f:content>
-            <viz:VizFrame id="vizStatus" class="dhViz" vizType="donut" uiConfig="{applicationSet:'fiori'}">
+            <viz:VizFrame id="vizStatus" class="dhViz" height="320px" vizType="donut" uiConfig="{applicationSet:'fiori'}">
               <viz:dataset>
                 <vizData:FlattenedDataset data="{/status}">
                   <vizData:dimensions>
@@ -133,7 +133,7 @@
                   <SegmentedButtonItem key="category" text="{i18n>byCategory}"/>
                 </items>
               </SegmentedButton>
-              <viz:VizFrame id="vizCheck" class="dhViz dhVizTall" vizType="bar" uiConfig="{applicationSet:'fiori'}">
+              <viz:VizFrame id="vizCheck" class="dhViz" height="{/checksVizHeight}" vizType="bar" uiConfig="{applicationSet:'fiori'}">
                 <viz:dataset>
                   <vizData:FlattenedDataset data="{/checks}">
                     <vizData:dimensions>
@@ -155,6 +155,9 @@
 
         <!-- Org drill -->
         <f:Card class="dhCard">
+          <f:layoutData>
+            <l:GridData span="XL12 L12 M12 S12"/>
+          </f:layoutData>
           <f:header>
             <card:Header title="{i18n>cardOrg}" subtitle="{/org/subtitle}"/>
           </f:header>
@@ -176,7 +179,7 @@
                   <SegmentedButtonItem key="completeness" text="{i18n>mCompleteness}"/>
                 </items>
               </SegmentedButton>
-              <viz:VizFrame id="vizOrg" class="dhViz" vizType="bar" uiConfig="{applicationSet:'fiori'}"
+              <viz:VizFrame id="vizOrg" class="dhViz" height="{/org/vizHeight}" vizType="bar" uiConfig="{applicationSet:'fiori'}"
                 selectData=".onOrgBarSelect">
                 <viz:dataset>
                   <vizData:FlattenedDataset data="{/org/rows}">
@@ -200,6 +203,9 @@
 
         <!-- Detail table -->
         <f:Card class="dhCard">
+          <f:layoutData>
+            <l:GridData span="XL12 L12 M12 S12"/>
+          </f:layoutData>
           <f:header>
             <card:Header title="{i18n>cardDetail}" subtitle="{i18n>cardDetailSub}"/>
           </f:header>
