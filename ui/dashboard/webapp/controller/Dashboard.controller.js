@@ -7,24 +7,27 @@ sap.ui.define([
 ], function (Controller, JSONModel, Sorter, Fragment, MessageToast) {
   "use strict";
 
-  var PAGE = 5000;            // OData page size for the full-roster read
+  var PAGE = 5000;                       // OData page size for the full-roster read
   var STORE_KEY = "hr360.dh.severity";
+
+  // Status colours - the same red / orange / green everywhere.
+  var COL = {
+    CRITICAL: "var(--sapNegativeColor, #bb0000)",
+    WARNING:  "var(--sapCriticalColor, #e9730c)",
+    OK:       "var(--sapPositiveColor, #107e3e)"
+  };
+  var ACCENT = "var(--sapAccentColor6, #0a6ed1)";
 
   function pct(n, d) { return d ? Math.round(n * 1000 / d) / 10 : 0; }
   function round1(x) { return Math.round(x * 10) / 10; }
-
-  // A bar chart must grow with its bar count so every entry shows in full;
-  // ~26px per bar + axis/margin, floored at 300 and capped so the page
-  // stays navigable.
-  function vizHeight(n) { return Math.min(1400, Math.max(300, n * 26 + 64)) + "px"; }
+  function nf(n) { return (n || 0).toLocaleString(); }
 
   return Controller.extend("hr360.datahealth.controller.Dashboard", {
 
-    /* ------------------------------------------------------------------ init */
+    /* ================================================================ init */
 
     onInit: function () {
       this._roster = [];                 // one row per employee  (EmployeeDq)
-      this._issues = [];                 // one row per employee+failed check (DataQualityIssue)
       this._byEmp  = {};                 // EmployeeID -> { checkId: true }
       this._orgPath = [];                // [{ key, text }]  length = drill level (0/1/2)
 
@@ -33,13 +36,11 @@ sap.ui.define([
         error: "",
         catalogue: [],                   // [{ id, cat, catLabel, name, rule, infotype, sev }]
         checksMode: "check",             // "check" | "category"
-        checksVizHeight: "320px",
-        orgMetric: "critPct",            // "critPct" | "critCount" | "completeness"
-        kpi:    { total: 0, critical: 0, warning: 0, clean: 0, criticalPct: 0, warningPct: 0, cleanPct: 0, completeness: 0 },
-        status: [],
-        checks: [],
+        orgSort: "worst",                // "worst" | "largest"
+        kpi: { total: 0, critical: 0, warning: 0, clean: 0, completeness: 0 },
+        org: { level: 0, crumbText: "", scopeText: "" },
         detail: [],
-        org: { level: 0, rows: [], subtitle: "", crumbText: "", canViewEmployees: false, vizHeight: "320px" }
+        html: { overview: "", fail: "", org: "" }
       });
       this.getView().setModel(this._vm);
       this._i18n = this.getView().getModel("i18n").getResourceBundle();
@@ -47,18 +48,32 @@ sap.ui.define([
       this._loadCatalogue()
         .then(this._loadData.bind(this))
         .then(this._recompute.bind(this))
-        .catch(function (e) {
-          this._vm.setProperty("/error", (e && e.message) || String(e));
-        }.bind(this))
+        .catch(function (e) { this._vm.setProperty("/error", (e && e.message) || String(e)); }.bind(this))
         .finally(function () { this._vm.setProperty("/busy", false); }.bind(this));
     },
+
+    // One delegated click listener on the view root - the chart HTML blocks are
+    // regenerated wholesale on every recompute, so per-element handlers can't be
+    // used.
+    onAfterRendering: function () {
+      if (this._clickBound) { return; }
+      var oRoot = this.getView().getDomRef();
+      if (!oRoot) { return; }
+      oRoot.addEventListener("click", this._onChartClick.bind(this));
+      this._clickBound = true;
+    },
+
+    onExit: function () {
+      if (this._helpDialog) { this._helpDialog.destroy(); this._helpDialog = null; }
+    },
+
+    /* ------------------------------------------------------------ catalogue */
 
     _loadCatalogue: function () {
       var sUrl = sap.ui.require.toUrl("hr360/datahealth/model/checkCatalogue.json");
       return fetch(sUrl).then(function (r) { return r.json(); }).then(function (cat) {
         var catLabel = {};
         (cat.categories || []).forEach(function (c) { catLabel[c.code] = c.label; });
-        this._catVersion = cat.version;
         var stored = this._readStoredSeverity();
         var list = (cat.checks || []).map(function (c) {
           return {
@@ -91,9 +106,6 @@ sap.ui.define([
 
     /* ---------------------------------------------------------------- OData */
 
-    // Read every row of an entity set, paged. An explicit key sort is essential:
-    // without $orderby, $skip/$top paging on HANA is not guaranteed stable and
-    // rows could be missed or duplicated across pages.
     _readAll: function (sPath, sSelect, aKeys) {
       var mParams = { $count: true };
       if (sSelect) { mParams.$select = sSelect; }
@@ -104,10 +116,8 @@ sap.ui.define([
         return oList.requestContexts(out.length, PAGE).then(function (aCtx) {
           aCtx.forEach(function (c) { out.push(c.getObject()); });
           var total = oList.getCount();
-          if (aCtx.length > 0 && typeof total === "number" && out.length < total) {
-            return page();
-          }
-          oList.destroy();                 // data already copied out - free the contexts
+          if (aCtx.length > 0 && typeof total === "number" && out.length < total) { return page(); }
+          oList.destroy();
           return out;
         });
       }
@@ -120,9 +130,8 @@ sap.ui.define([
         this._readAll("/DataQualityIssue", "EmployeeID,CheckID", ["EmployeeID", "CheckID"])
       ]).then(function (res) {
         this._roster = res[0] || [];
-        this._issues = res[1] || [];
         var byEmp = {};
-        this._issues.forEach(function (i) {
+        (res[1] || []).forEach(function (i) {
           (byEmp[i.EmployeeID] || (byEmp[i.EmployeeID] = {}))[i.CheckID] = true;
         });
         this._byEmp = byEmp;
@@ -138,17 +147,23 @@ sap.ui.define([
         .finally(function () { this._vm.setProperty("/busy", false); }.bind(this));
     },
 
-    /* --------------------------------------------------------- aggregation */
+    /* ------------------------------------------------------------- helpers */
+
+    _esc: function (v) {
+      return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    },
 
     _sevOf: function (checkId) {
       var c = this._catById[checkId];
-      return c ? c.sev : null;              // unknown check ids are ignored
+      return c ? c.sev : null;
     },
 
     _inScope: function (r) {
       var p = this._orgPath;
-      if (p[0] && r.CompanyCode   !== p[0].key) return false;
-      if (p[1] && r.PersonnelArea !== p[1].key) return false;
+      if (p[0] && r.CompanyCode   !== p[0].key) { return false; }
+      if (p[1] && r.PersonnelArea !== p[1].key) { return false; }
       return true;
     },
 
@@ -156,9 +171,11 @@ sap.ui.define([
       return (v && v !== "00000000") ? v : this._i18n.getText("unassigned");
     },
 
+    /* ======================================================== aggregation */
+
     _recompute: function () {
       var self  = this;
-      var level = this._orgPath.length;               // 0 company / 1 pers.area / 2 org unit
+      var level = this._orgPath.length;
       var N     = this._catalogue.length || 1;
 
       var total = 0, crit = 0, warn = 0, ok = 0, passSum = 0;
@@ -185,144 +202,248 @@ sap.ui.define([
         if (status === "CRITICAL") { crit++; } else if (status === "WARNING") { warn++; } else { ok++; }
         passSum += (N - failCount);
 
-        // org-bar node at the current drill level
         var nk, nl;
         if (level === 0)      { nk = r.CompanyCode;   nl = r.CompanyCode || "(none)"; }
         else if (level === 1) { nk = r.PersonnelArea; nl = r.PersonnelArea || "(none)"; }
         else                  { nk = r.OrgUnit;       nl = self._orgUnitLabel(r.OrgUnit); }
-        var o = org[nk] || (org[nk] = { key: nk, label: nl, emp: 0, crit: 0, warn: 0, pass: 0 });
-        o.emp++; o.pass += (N - failCount);
-        if (status === "CRITICAL") { o.crit++; } else if (status === "WARNING") { o.warn++; }
+        var o = org[nk] || (org[nk] = { key: nk, label: nl, emp: 0, crit: 0, warn: 0, ok: 0 });
+        o.emp++; o[status === "CRITICAL" ? "crit" : status === "WARNING" ? "warn" : "ok"]++;
 
-        // detail table row = full org tuple
         var dk = [r.CompanyCode, r.PersonnelArea, r.OrgUnit].join("|");
         var d = detail[dk] || (detail[dk] = {
           company: r.CompanyCode, area: r.PersonnelArea, orgUnit: self._orgUnitLabel(r.OrgUnit),
           emp: 0, crit: 0, warn: 0, pass: 0
         });
         d.emp++; d.pass += (N - failCount);
-        if (status === "CRITICAL") { d.crit++; } else if (status === "WARNING") { d.warn++; }
+        d[status === "CRITICAL" ? "crit" : status === "WARNING" ? "warn" : "x"]++;
       });
 
-      /* KPI strip */
       this._vm.setProperty("/kpi", {
         total: total, critical: crit, warning: warn, clean: ok,
-        criticalPct: pct(crit, total), warningPct: pct(warn, total), cleanPct: pct(ok, total),
         completeness: total ? round1(passSum * 100 / (total * N)) : 0
       });
 
-      /* status donut */
-      this._vm.setProperty("/status", [
-        { name: "CRITICAL", value: crit },
-        { name: "WARNING",  value: warn },
-        { name: "OK",       value: ok }
-      ].filter(function (x) { return x.value > 0; }));
+      /* ---- section HTML ---- */
+      this._vm.setProperty("/html/overview", this._overviewHtml(total, crit, warn, ok,
+        total ? round1(passSum * 100 / (total * N)) : 0));
+      this._vm.setProperty("/html/fail", this._failHtml(crit, warn, ok, total, byCheck, byCat));
+      this._vm.setProperty("/html/org", this._orgHtml(org, total));
 
-      /* failures by check / category */
-      this._buildChecks(byCheck, byCat);
-
-      /* org bar */
-      var metric = this._vm.getProperty("/orgMetric");
-      var orgRows = Object.keys(org).map(function (k) {
-        var o = org[k];
-        return {
-          key: o.key, label: o.label, employees: o.emp,
-          critical: o.crit, warning: o.warn,
-          critPct: pct(o.crit, o.emp),
-          completeness: o.emp ? round1(o.pass * 100 / (o.emp * N)) : 0,
-          value: metric === "critCount" ? o.crit
-               : metric === "completeness" ? (o.emp ? round1(o.pass * 100 / (o.emp * N)) : 0)
-               : pct(o.crit, o.emp)
-        };
-      });
-      orgRows.sort(function (a, b) {
-        return metric === "completeness" ? a.value - b.value : b.value - a.value;   // worst first
-      });
-      this._vm.setProperty("/org/rows", orgRows);
-      this._vm.setProperty("/org/vizHeight", vizHeight(orgRows.length));
+      /* ---- org meta ---- */
       this._vm.setProperty("/org/level", level);
-      this._vm.setProperty("/org/subtitle", this._i18n.getText(
-        ["cardOrgSubL0", "cardOrgSubL1", "cardOrgSubL2"][level],
-        [this._orgPath[0] && this._orgPath[0].key, this._orgPath[1] && this._orgPath[1].key]));
       this._vm.setProperty("/org/crumbText",
-        this._orgPath.map(function (p) { return p.key; }).join("  /  "));
-      this._vm.setProperty("/org/canViewEmployees", this._orgPath.length > 0);
+        level === 0 ? "" : this._orgPath.map(function (p) { return p.key; }).join("  ›  "));
+      this._vm.setProperty("/org/scopeText", level === 0
+        ? this._i18n.getText("scopeAll")
+        : this._i18n.getText("scopeFiltered", [this._orgPath.map(function (p) { return p.key; }).join(" › ")]));
 
-      /* detail table */
+      /* ---- detail table ---- */
       var detailRows = Object.keys(detail).map(function (k) {
         var d = detail[k];
         d.status = d.crit ? "CRITICAL" : d.warn ? "WARNING" : "OK";
         d.completeness = d.emp ? round1(d.pass * 100 / (d.emp * N)) : 0;
         return d;
       });
-      detailRows.sort(function (a, b) { return b.crit - a.crit; });
+      detailRows.sort(function (a, b) { return b.crit - a.crit || b.emp - a.emp; });
       this._vm.setProperty("/detail", detailRows);
     },
 
-    _buildChecks: function (byCheck, byCat) {
-      var self = this;
+    /* ====================================================== chart rendering */
+
+    // Donut: fixed 3-status split. cx/cy 60, r 44, thickness 16.
+    _donutSvg: function (parts, iTotal) {
+      var C = 2 * Math.PI * 44, off = 0;
+      var segs = parts.filter(function (p) { return p.value > 0; }).map(function (p) {
+        var dash = (p.value / (iTotal || 1)) * C;
+        var el = '<circle cx="60" cy="60" r="44" fill="none" stroke="' + p.color + '" stroke-width="16" ' +
+          'stroke-dasharray="' + dash + " " + (C - dash) + '" stroke-dashoffset="' + (-off) +
+          '" transform="rotate(-90 60 60)"/>';
+        off += dash;
+        return el;
+      }).join("");
+      return '<svg class="dh-donut" viewBox="0 0 120 120" role="img" aria-label="status split">' +
+        '<circle cx="60" cy="60" r="44" fill="none" stroke="var(--sapList_Background,#eef2f6)" stroke-width="16"/>' +
+        segs +
+        '<text x="60" y="56" text-anchor="middle" class="dh-donut-num">' + nf(iTotal) + '</text>' +
+        '<text x="60" y="72" text-anchor="middle" class="dh-donut-cap">' + this._esc(this._i18n.getText("kpiTotal")) + '</text></svg>';
+    },
+
+    // Horizontal bars. rows: [{label, value, pctOfTotal, color, key, drill, title}]
+    _barsHtml: function (rows, mOpts) {
+      mOpts = mOpts || {};
+      var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+      var body = rows.map(function (r) {
+        var w = Math.max(2, Math.round(r.value / max * 100));
+        var attrs = r.drill ? ' data-drill="' + this._esc(r.drill) + '" data-key="' + this._esc(r.key) + '"' : "";
+        var cls = "dh-bar" + (r.drill ? " dh-bar-click" : "");
+        var right = mOpts.showPct
+          ? '<span class="dh-bar-val">' + nf(r.value) + '</span><span class="dh-bar-pct">' + r.pctOfTotal + '%</span>'
+          : '<span class="dh-bar-val">' + nf(r.value) + '</span>';
+        return '<div class="' + cls + '"' + attrs + (r.title ? ' title="' + this._esc(r.title) + '"' : "") + '>' +
+          '<span class="dh-bar-label">' + this._esc(r.label) + '</span>' +
+          '<span class="dh-bar-track"><span class="dh-bar-fill" style="width:' + w + '%;background:' + (r.color || ACCENT) + '"></span></span>' +
+          right + '</div>';
+      }.bind(this)).join("");
+      return '<div class="dh-bars">' + body + "</div>";
+    },
+
+    // Stacked crit/warn/ok bar (one org node).
+    _stackHtml: function (o) {
+      var t = o.emp || 1;
+      var seg = function (n, col) {
+        return n > 0 ? '<span style="width:' + (n / t * 100) + '%;background:' + col + '"></span>' : "";
+      };
+      return '<span class="dh-stack">' + seg(o.crit, COL.CRITICAL) + seg(o.warn, COL.WARNING) + seg(o.ok, COL.OK) + '</span>';
+    },
+
+    _card: function (sTitle, sSub, sBody, sInsight) {
+      return '<div class="dh-card">' +
+        '<div class="dh-card-h"><div class="dh-card-t">' + this._esc(sTitle) + '</div>' +
+        (sSub ? '<div class="dh-card-s">' + this._esc(sSub) + '</div>' : "") + '</div>' +
+        '<div class="dh-card-b">' + sBody + '</div>' +
+        (sInsight ? '<div class="dh-card-i">' + sInsight + '</div>' : "") + '</div>';
+    },
+
+    _overviewHtml: function (total, crit, warn, ok, score) {
+      var tile = function (label, num, sub, cls) {
+        return '<div class="dh-kpi ' + (cls || "") + '"><div class="dh-kpi-l">' + label + '</div>' +
+          '<div class="dh-kpi-n">' + nf(num) + '</div><div class="dh-kpi-s">' + sub + '</div></div>';
+      };
+      return '<div class="dh-kpis">' +
+        tile(this._i18n.getText("kpiTotal"), total, this._i18n.getText("kpiTotalSub"), "") +
+        tile(this._i18n.getText("kpiCritical"), crit, pct(crit, total) + "% " + this._i18n.getText("ofWorkforce"), "dh-crit") +
+        tile(this._i18n.getText("kpiWarning"), warn, pct(warn, total) + "% " + this._i18n.getText("ofWorkforce"), "dh-warn") +
+        tile(this._i18n.getText("kpiClean"), ok, pct(ok, total) + "% " + this._i18n.getText("ofWorkforce"), "dh-ok") +
+        tile(this._i18n.getText("kpiCompleteness"), score + "%", this._i18n.getText("kpiCompletenessSub"), "dh-score") +
+        '</div>';
+    },
+
+    _failHtml: function (crit, warn, ok, total, byCheck, byCat) {
+      /* status donut card */
+      var parts = [
+        { name: "CRITICAL", value: crit, color: COL.CRITICAL },
+        { name: "WARNING",  value: warn, color: COL.WARNING },
+        { name: "OK",       value: ok,   color: COL.OK }
+      ];
+      var legend = "<ul class=\"dh-legend\">" + parts.map(function (p) {
+        return '<li><span class="dh-sw" style="background:' + p.color + '"></span>' +
+          this._esc(this._i18n.getText("st" + p.name)) +
+          '<span class="dh-legv">' + nf(p.value) + " (" + pct(p.value, total) + "%)</span></li>";
+      }.bind(this)).join("") + "</ul>";
+      var donutBody = '<div class="dh-donut-row">' + this._donutSvg(parts, total) + legend + "</div>";
+      var topStatus = crit >= warn && crit >= ok ? "CRITICAL" : warn >= ok ? "WARNING" : "OK";
+      var donutInsight = "<b>" + this._esc(this._i18n.getText("st" + topStatus)) + "</b> — " +
+        nf(parts.filter(function (p) { return p.name === topStatus; })[0].value) + " " +
+        this._i18n.getText("employeesLc") + " (" + pct(parts.filter(function (p) { return p.name === topStatus; })[0].value, total) + "%).";
+
+      /* by-check / by-category card */
       var mode = this._vm.getProperty("/checksMode");
       var rows;
       if (mode === "category") {
         var seen = {};
         this._catalogue.forEach(function (c) { seen[c.cat] = c.catLabel; });
         rows = Object.keys(seen).map(function (code) {
-          return { key: code, name: seen[code], value: byCat[code] || 0 };
+          return { label: seen[code], value: byCat[code] || 0, color: ACCENT };
         });
       } else {
         rows = this._catalogue.map(function (c) {
-          return { key: c.id, name: c.name, value: byCheck[c.id] || 0 };
+          return {
+            label: c.name, value: byCheck[c.id] || 0,
+            color: c.sev === "C" ? COL.CRITICAL : COL.WARNING,
+            title: c.rule
+          };
         });
       }
-      rows = rows.filter(function (r) { return r.value > 0; });
-      rows.sort(function (a, b) { return b.value - a.value; });
-      this._vm.setProperty("/checks", rows);
-      this._vm.setProperty("/checksVizHeight", vizHeight(rows.length));
+      rows = rows.filter(function (r) { return r.value > 0; })
+                 .sort(function (a, b) { return b.value - a.value; });
+      rows.forEach(function (r) { r.pctOfTotal = pct(r.value, total); });
+      var checkBody = rows.length ? this._barsHtml(rows, { showPct: true }) :
+        '<p class="dh-empty">' + this._esc(this._i18n.getText("noData")) + "</p>";
+      var checkInsight = rows.length
+        ? "<b>" + this._esc(rows[0].label) + "</b> — " + nf(rows[0].value) + " " +
+          this._i18n.getText("employeesLc") + " (" + rows[0].pctOfTotal + "%)."
+        : this._i18n.getText("allClean");
+
+      return '<div class="dh-grid dh-grid-2">' +
+        this._card(this._i18n.getText("cardStatus"), this._i18n.getText("cardStatusSub"), donutBody, donutInsight) +
+        this._card(this._i18n.getText("cardCheck"),
+          mode === "category" ? this._i18n.getText("byCategory") : this._i18n.getText("byCheck"),
+          checkBody, checkInsight) +
+        "</div>";
     },
 
-    /* -------------------------------------------------------- interactions */
+    _orgHtml: function (org, total) {
+      var sort = this._vm.getProperty("/orgSort");
+      var level = this._orgPath.length;
+      var rows = Object.keys(org).map(function (k) {
+        var o = org[k];
+        o.critPct = pct(o.crit, o.emp);
+        return o;
+      });
+      rows.sort(sort === "largest"
+        ? function (a, b) { return b.emp - a.emp; }
+        : function (a, b) { return b.critPct - a.critPct || b.crit - a.crit; });
+
+      var body = rows.map(function (o) {
+        var drill = level < 2 ? "in" : "emp";
+        return '<div class="dh-bar dh-bar-click" data-drill="' + drill + '" data-key="' + this._esc(o.key) + '" ' +
+          'title="' + this._esc(o.label + ": " + o.crit + " critical / " + o.warn + " warning / " + o.ok + " ok of " + o.emp) + '">' +
+          '<span class="dh-bar-label">' + this._esc(o.label) + '</span>' +
+          this._stackHtml(o) +
+          '<span class="dh-bar-val">' + nf(o.emp) + '</span>' +
+          '<span class="dh-bar-pct dh-bar-crit">' + o.critPct + '%</span>' +
+          '</div>';
+      }.bind(this)).join("");
+
+      var worst = rows.slice().sort(function (a, b) { return b.critPct - a.critPct; })[0];
+      var insight = worst
+        ? "<b>" + this._esc(worst.label) + "</b> — " + this._i18n.getText("highestCritical") + " " +
+          worst.critPct + "% (" + nf(worst.crit) + " " + this._i18n.getText("ofN", [nf(worst.emp)]) + ")."
+        : this._i18n.getText("noData");
+      var hint = level < 2 ? this._i18n.getText("drillHint") : this._i18n.getText("drillHintLeaf");
+
+      return '<div class="dh-bars dh-bars-org">' + body + '</div>' +
+        '<div class="dh-orgfoot"><span class="dh-legend-inline">' +
+        '<span class="dh-sw" style="background:' + COL.CRITICAL + '"></span>' + this._esc(this._i18n.getText("stCRITICAL")) +
+        '<span class="dh-sw" style="background:' + COL.WARNING + '"></span>' + this._esc(this._i18n.getText("stWARNING")) +
+        '<span class="dh-sw" style="background:' + COL.OK + '"></span>' + this._esc(this._i18n.getText("stOK")) +
+        '</span><span class="dh-hint">' + this._esc(hint) + '</span></div>' +
+        '<div class="dh-card-i">' + insight + '</div>';
+    },
+
+    /* ======================================================= interactions */
+
+    _onChartClick: function (e) {
+      var el = e.target.closest && e.target.closest("[data-drill]");
+      if (!el) { return; }
+      var drill = el.getAttribute("data-drill");
+      var key   = el.getAttribute("data-key");
+      if (drill === "in") {
+        this._orgPath.push({ key: key, text: key });
+        this._recompute();
+      } else if (drill === "emp") {
+        var p = { OrgUnit: (key && key !== this._i18n.getText("unassigned")) ? key : "" };
+        if (this._orgPath[0]) { p.CompanyCode = this._orgPath[0].key; }
+        if (this._orgPath[1]) { p.PersonnelArea = this._orgPath[1].key; }
+        this._toEmployees(p);
+      }
+    },
 
     onChecksModeChange: function (oEvent) {
-      this._vm.setProperty("/checksMode", oEvent.getParameter("item").getKey());
+      this._vm.setProperty("/checksMode", oEvent.getParameter("selectedItem").getKey());
       this._recompute();
     },
 
-    onOrgMetricChange: function (oEvent) {
-      this._vm.setProperty("/orgMetric", oEvent.getParameter("item").getKey());
+    onOrgSortChange: function (oEvent) {
+      this._vm.setProperty("/orgSort", oEvent.getParameter("selectedItem").getKey());
       this._recompute();
     },
 
-    onOrgBarSelect: function (oEvent) {
-      var data  = oEvent.getParameter("data");
-      var label = data && data[0] && data[0].data && data[0].data.Node;
-      if (!label) { return; }
-      var row = (this._vm.getProperty("/org/rows") || []).filter(function (r) { return r.label === label; })[0];
-      if (!row) { return; }
+    onOrgHome: function () { this._orgPath = []; this._recompute(); },
+    onOrgUp:   function () { this._orgPath.pop(); this._recompute(); },
 
-      if (this._orgPath.length >= 2) {
-        // leaf level - a bar is an org unit -> open the filtered employee list
-        this._toEmployees({
-          CompanyCode: this._orgPath[0].key,
-          PersonnelArea: this._orgPath[1].key,
-          OrgUnit: row.key
-        });
-        return;
-      }
-      this._orgPath.push({ key: row.key, text: label });
-      this._recompute();
-    },
-
-    onOrgHome: function () {
-      this._orgPath = [];
-      this._recompute();
-    },
-
-    onOrgUp: function () {
-      this._orgPath.pop();
-      this._recompute();
-    },
-
-    onViewEmployees: function () {
+    // Always available - opens Employee 360 with whatever scope is active.
+    onOpenEmployees: function () {
       var p = {};
       if (this._orgPath[0]) { p.CompanyCode = this._orgPath[0].key; }
       if (this._orgPath[1]) { p.PersonnelArea = this._orgPath[1].key; }
@@ -354,9 +475,7 @@ sap.ui.define([
 
     onSeverityChange: function (oEvent) {
       var ctx = oEvent.getSource().getBindingContext();
-      if (ctx) {
-        this._vm.setProperty(ctx.getPath() + "/sev", oEvent.getParameter("item").getKey());
-      }
+      if (ctx) { this._vm.setProperty(ctx.getPath() + "/sev", oEvent.getParameter("item").getKey()); }
     },
 
     onApplySeverity: function () {
@@ -376,20 +495,15 @@ sap.ui.define([
     onOpenHelp: function () {
       var self = this;
       if (this._helpDialog) { this._helpDialog.open(); return; }
-      Fragment.load({
-        id: this.getView().getId(), name: "hr360.datahealth.view.Help", controller: this
-      }).then(function (oDialog) {
-        self.getView().addDependent(oDialog);
-        self._helpDialog = oDialog;
-        oDialog.open();
-      });
+      Fragment.load({ id: this.getView().getId(), name: "hr360.datahealth.view.Help", controller: this })
+        .then(function (oDialog) {
+          self.getView().addDependent(oDialog);
+          self._helpDialog = oDialog;
+          oDialog.open();
+        });
     },
 
-    onCloseHelp: function () { if (this._helpDialog) { this._helpDialog.close(); } },
-
-    onExit: function () {
-      if (this._helpDialog) { this._helpDialog.destroy(); this._helpDialog = null; }
-    }
+    onCloseHelp: function () { if (this._helpDialog) { this._helpDialog.close(); } }
 
   });
 });

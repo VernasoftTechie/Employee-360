@@ -2,15 +2,16 @@
   xmlns:mvc="sap.ui.core.mvc"
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
-  xmlns:f="sap.f"
-  xmlns:card="sap.f.cards"
-  xmlns:l="sap.ui.layout"
-  xmlns:viz="sap.viz.ui5.controls"
-  xmlns:vizData="sap.viz.ui5.data"
-  xmlns:vizFeeds="sap.viz.ui5.controls.common.feeds"
   controllerName="hr360.datahealth.controller.Dashboard"
   height="100%"
   displayBlock="true">
+
+  <!-- Compact card system (matches the Control Tower dashboard): every chart is
+       plain SVG/CSS built by the controller (_recompute -> /html/*) and rendered
+       through a core:HTML block; clicks on a [data-drill] element are caught by
+       one delegated listener on the view root (onAfterRendering). Interactive
+       sap.m controls (severity panel, breadcrumb, sort, "open in Employee 360",
+       detail table) stay as real controls. -->
 
   <App id="app">
   <Page id="page" class="dhPage" title="{i18n>pageTitle}" showHeader="true"
@@ -24,224 +25,119 @@
       <MessageStrip visible="{= !!${/error} }" text="{/error}" type="Error"
         showIcon="true" class="sapUiSmallMargin"/>
 
-      <Text text="{i18n>subTitle}" class="sapUiSmallMarginBegin sapUiTinyMarginTop"/>
+      <VBox class="dhWrap">
 
-      <!-- Severity checklist -->
-      <Panel expandable="true" expanded="false" class="sapUiSmallMargin dhPanel">
-        <headerToolbar>
-          <OverflowToolbar>
-            <Title text="{i18n>sevPanel}"/>
-            <ToolbarSpacer/>
-            <Button text="{i18n>apply}" type="Emphasized" press=".onApplySeverity"
-              tooltip="{i18n>applyTip}"/>
-            <Button text="{i18n>reset}" press=".onResetSeverity" tooltip="{i18n>resetTip}"/>
-          </OverflowToolbar>
-        </headerToolbar>
-        <Table id="sevTable" items="{path: '/catalogue', sorter: {path: 'catLabel', group: true}}"
-          mode="None" sticky="ColumnHeaders" alternateRowColors="true">
+        <Text text="{i18n>subTitle}" class="dhIntro"/>
+
+        <!-- Severity settings -->
+        <Panel expandable="true" expanded="false" class="dhPanel">
+          <headerToolbar>
+            <OverflowToolbar>
+              <core:Icon src="sap-icon://filter-fields" class="sapUiTinyMarginEnd"/>
+              <Title text="{i18n>sevPanel}"/>
+              <Label text="{= ${/catalogue}.length + ' ' + ${i18n>checksWord} }" class="dhMuted sapUiSmallMarginBegin"/>
+              <ToolbarSpacer/>
+              <Button text="{i18n>apply}" type="Emphasized" press=".onApplySeverity" tooltip="{i18n>applyTip}"/>
+              <Button text="{i18n>reset}" press=".onResetSeverity" tooltip="{i18n>resetTip}"/>
+            </OverflowToolbar>
+          </headerToolbar>
+          <Table id="sevTable" items="{path: '/catalogue', sorter: {path: 'catLabel', group: true}}"
+            mode="None" sticky="ColumnHeaders" alternateRowColors="true">
+            <columns>
+              <Column width="42%"><Text text="{i18n>colCheck}"/></Column>
+              <Column width="33%" minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>colSource}"/></Column>
+              <Column width="25%" hAlign="End"><Text text="{i18n>colSeverity}"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <VBox><Text text="{name}"/><Text text="{rule}" class="dhMuted"/></VBox>
+                  <Text text="{infotype}"/>
+                  <SegmentedButton selectedKey="{sev}" selectionChange=".onSeverityChange">
+                    <items>
+                      <SegmentedButtonItem key="C" text="{i18n>critical}"/>
+                      <SegmentedButtonItem key="W" text="{i18n>warning}"/>
+                    </items>
+                  </SegmentedButton>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <!-- Overview -->
+        <Toolbar design="Transparent" class="dhSectionBar">
+          <Title text="{i18n>secOverview}" level="H3"/>
+          <Text text="{i18n>secOverviewHint}" class="dhMuted sapUiSmallMarginBegin"/>
+        </Toolbar>
+        <core:HTML content="{/html/overview}" sanitizeContent="false"/>
+
+        <!-- Where employees fail -->
+        <Toolbar design="Transparent" class="dhSectionBar sapUiSmallMarginTop">
+          <Title text="{i18n>secFail}" level="H3"/>
+          <Text text="{i18n>secFailHint}" class="dhMuted sapUiSmallMarginBegin"/>
+          <ToolbarSpacer/>
+          <Label text="{i18n>show}" class="dhMuted sapUiTinyMarginEnd"/>
+          <Select selectedKey="{/checksMode}" change=".onChecksModeChange" class="dhSelect">
+            <core:Item key="check" text="{i18n>byCheck}"/>
+            <core:Item key="category" text="{i18n>byCategory}"/>
+          </Select>
+        </Toolbar>
+        <core:HTML content="{/html/fail}" sanitizeContent="false"/>
+
+        <!-- By organisation -->
+        <Toolbar design="Transparent" class="dhSectionBar sapUiSmallMarginTop">
+          <Title text="{i18n>secOrg}" level="H3"/>
+          <Button icon="sap-icon://home" text="{i18n>drillRoot}" type="Transparent" press=".onOrgHome"/>
+          <Text text="{/org/crumbText}" class="dhCrumb"/>
+          <Button icon="sap-icon://nav-back" text="{i18n>drillUp}" type="Transparent"
+            visible="{= ${/org/level} > 0 }" press=".onOrgUp"/>
+          <ToolbarSpacer/>
+          <Label text="{i18n>rankBy}" class="dhMuted sapUiTinyMarginEnd"/>
+          <Select selectedKey="{/orgSort}" change=".onOrgSortChange" class="dhSelect">
+            <core:Item key="worst" text="{i18n>sortWorst}"/>
+            <core:Item key="largest" text="{i18n>sortLargest}"/>
+          </Select>
+          <Button text="{i18n>openInE360}" type="Emphasized" icon="sap-icon://navigation-right-arrow"
+            press=".onOpenEmployees" tooltip="{/org/scopeText}" class="sapUiTinyMarginBegin"/>
+        </Toolbar>
+        <core:HTML content="{/html/org}" sanitizeContent="false"/>
+
+        <!-- Detail -->
+        <Toolbar design="Transparent" class="dhSectionBar sapUiSmallMarginTop">
+          <Title text="{i18n>cardDetail}" level="H3"/>
+          <Text text="{i18n>cardDetailSub}" class="dhMuted sapUiSmallMarginBegin"/>
+        </Toolbar>
+        <Table id="detailTable" items="{/detail}" growing="true" growingThreshold="25" mode="None"
+          sticky="ColumnHeaders" class="dhDetail">
           <columns>
-            <Column width="40%"><Text text="{i18n>colCheck}"/></Column>
-            <Column width="35%" minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>colSource}"/></Column>
-            <Column width="25%" hAlign="End"><Text text="{i18n>colSeverity}"/></Column>
+            <Column><Text text="{i18n>colCompany}"/></Column>
+            <Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>colArea}"/></Column>
+            <Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>colOrgUnit}"/></Column>
+            <Column><Text text="{i18n>colStatus}"/></Column>
+            <Column hAlign="End"><Text text="{i18n>colEmployees}"/></Column>
+            <Column hAlign="End"><Text text="{i18n>colCritEmp}"/></Column>
+            <Column hAlign="End"><Text text="{i18n>colWarnEmp}"/></Column>
+            <Column hAlign="End"><Text text="{i18n>colComplPct}"/></Column>
           </columns>
           <items>
-            <ColumnListItem>
+            <ColumnListItem type="Navigation" press=".onDetailRowPress">
               <cells>
-                <VBox>
-                  <Text text="{name}"/>
-                  <Text text="{rule}" class="dhMuted"/>
-                </VBox>
-                <Text text="{infotype}"/>
-                <SegmentedButton selectedKey="{sev}" selectionChange=".onSeverityChange">
-                  <items>
-                    <SegmentedButtonItem key="C" text="{i18n>critical}"/>
-                    <SegmentedButtonItem key="W" text="{i18n>warning}"/>
-                  </items>
-                </SegmentedButton>
+                <Text text="{company}"/>
+                <Text text="{area}"/>
+                <Text text="{orgUnit}"/>
+                <ObjectStatus text="{status}" inverted="true"
+                  state="{= ${status} === 'CRITICAL' ? 'Error' : ${status} === 'WARNING' ? 'Warning' : 'Success' }"/>
+                <Text text="{emp}"/>
+                <Text text="{crit}"/>
+                <Text text="{warn}"/>
+                <Text text="{= ${completeness} + '%' }"/>
               </cells>
             </ColumnListItem>
           </items>
         </Table>
-      </Panel>
 
-      <!-- KPI strip -->
-      <l:Grid defaultSpan="XL3 L3 M6 S12" hSpacing="1" vSpacing="1" class="sapUiSmallMargin">
-        <f:Card class="dhCard">
-          <f:header>
-            <card:NumericHeader title="{i18n>kpiTotal}" number="{/kpi/total}"
-              subtitle="{i18n>kpiTotalSub}"/>
-          </f:header>
-        </f:Card>
-        <f:Card class="dhCard">
-          <f:header>
-            <card:NumericHeader title="{i18n>kpiCritical}" number="{/kpi/critical}" state="Error"
-              subtitle="{/kpi/criticalPct}% {i18n>ofWorkforce}"/>
-          </f:header>
-        </f:Card>
-        <f:Card class="dhCard">
-          <f:header>
-            <card:NumericHeader title="{i18n>kpiWarning}" number="{/kpi/warning}" state="Critical"
-              subtitle="{/kpi/warningPct}% {i18n>ofWorkforce}"/>
-          </f:header>
-        </f:Card>
-        <f:Card class="dhCard">
-          <f:header>
-            <card:NumericHeader title="{i18n>kpiClean}" number="{/kpi/clean}" state="Good"
-              subtitle="{/kpi/cleanPct}% {i18n>ofWorkforce}"/>
-          </f:header>
-        </f:Card>
-      </l:Grid>
-
-      <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="1" vSpacing="1">
-
-        <!-- Status donut -->
-        <f:Card class="dhCard">
-          <f:header>
-            <card:Header title="{i18n>cardStatus}"
-              subtitle="{i18n>cardStatusSub} — {i18n>completeness} {/kpi/completeness}%"/>
-          </f:header>
-          <f:content>
-            <viz:VizFrame id="vizStatus" class="dhViz" height="320px" vizType="donut" uiConfig="{applicationSet:'fiori'}">
-              <viz:dataset>
-                <vizData:FlattenedDataset data="{/status}">
-                  <vizData:dimensions>
-                    <vizData:DimensionDefinition name="Status" value="{name}"/>
-                  </vizData:dimensions>
-                  <vizData:measures>
-                    <vizData:MeasureDefinition name="Employees" value="{value}"/>
-                  </vizData:measures>
-                </vizData:FlattenedDataset>
-              </viz:dataset>
-              <viz:feeds>
-                <vizFeeds:FeedItem uid="size" type="Measure" values="Employees"/>
-                <vizFeeds:FeedItem uid="color" type="Dimension" values="Status"/>
-              </viz:feeds>
-            </viz:VizFrame>
-          </f:content>
-        </f:Card>
-
-        <!-- Failures by check / category -->
-        <f:Card class="dhCard">
-          <f:header>
-            <card:Header title="{i18n>cardCheck}" subtitle="{i18n>cardCheckSub}"/>
-          </f:header>
-          <f:content>
-            <VBox class="sapUiSmallMarginBegin">
-              <SegmentedButton selectedKey="{/checksMode}" selectionChange=".onChecksModeChange">
-                <items>
-                  <SegmentedButtonItem key="check" text="{i18n>byCheck}"/>
-                  <SegmentedButtonItem key="category" text="{i18n>byCategory}"/>
-                </items>
-              </SegmentedButton>
-              <viz:VizFrame id="vizCheck" class="dhViz" height="{/checksVizHeight}" vizType="bar" uiConfig="{applicationSet:'fiori'}">
-                <viz:dataset>
-                  <vizData:FlattenedDataset data="{/checks}">
-                    <vizData:dimensions>
-                      <vizData:DimensionDefinition name="Check" value="{name}"/>
-                    </vizData:dimensions>
-                    <vizData:measures>
-                      <vizData:MeasureDefinition name="Employees affected" value="{value}"/>
-                    </vizData:measures>
-                  </vizData:FlattenedDataset>
-                </viz:dataset>
-                <viz:feeds>
-                  <vizFeeds:FeedItem uid="valueAxis" type="Measure" values="Employees affected"/>
-                  <vizFeeds:FeedItem uid="categoryAxis" type="Dimension" values="Check"/>
-                </viz:feeds>
-              </viz:VizFrame>
-            </VBox>
-          </f:content>
-        </f:Card>
-
-        <!-- Org drill -->
-        <f:Card class="dhCard">
-          <f:layoutData>
-            <l:GridData span="XL12 L12 M12 S12"/>
-          </f:layoutData>
-          <f:header>
-            <card:Header title="{i18n>cardOrg}" subtitle="{/org/subtitle}"/>
-          </f:header>
-          <f:content>
-            <VBox class="sapUiSmallMarginBegin">
-              <HBox alignItems="Center" wrap="Wrap" class="dhBreadcrumb">
-                <Button icon="sap-icon://home" text="{i18n>drillRoot}" type="Transparent" press=".onOrgHome"/>
-                <Text text="{= ${/org/crumbText} ? '  /  ' + ${/org/crumbText} : '' }"/>
-                <Button icon="sap-icon://nav-back" text="{i18n>drillUp}" type="Transparent"
-                  visible="{= ${/org/level} > 0 }" press=".onOrgUp"/>
-                <ToolbarSpacer/>
-                <Button text="{i18n>viewEmployees}" type="Emphasized" icon="sap-icon://navigation-right-arrow"
-                  visible="{/org/canViewEmployees}" press=".onViewEmployees"/>
-              </HBox>
-              <SegmentedButton selectedKey="{/orgMetric}" selectionChange=".onOrgMetricChange">
-                <items>
-                  <SegmentedButtonItem key="critPct" text="{i18n>mCritPct}"/>
-                  <SegmentedButtonItem key="critCount" text="{i18n>mCritCount}"/>
-                  <SegmentedButtonItem key="completeness" text="{i18n>mCompleteness}"/>
-                </items>
-              </SegmentedButton>
-              <viz:VizFrame id="vizOrg" class="dhViz" height="{/org/vizHeight}" vizType="bar" uiConfig="{applicationSet:'fiori'}"
-                selectData=".onOrgBarSelect">
-                <viz:dataset>
-                  <vizData:FlattenedDataset data="{/org/rows}">
-                    <vizData:dimensions>
-                      <vizData:DimensionDefinition name="Node" value="{label}"/>
-                    </vizData:dimensions>
-                    <vizData:measures>
-                      <vizData:MeasureDefinition name="Value" value="{value}"/>
-                    </vizData:measures>
-                  </vizData:FlattenedDataset>
-                </viz:dataset>
-                <viz:feeds>
-                  <vizFeeds:FeedItem uid="valueAxis" type="Measure" values="Value"/>
-                  <vizFeeds:FeedItem uid="categoryAxis" type="Dimension" values="Node"/>
-                </viz:feeds>
-              </viz:VizFrame>
-              <Text text="{i18n>drillHint}" class="dhMuted"/>
-            </VBox>
-          </f:content>
-        </f:Card>
-
-        <!-- Detail table -->
-        <f:Card class="dhCard">
-          <f:layoutData>
-            <l:GridData span="XL12 L12 M12 S12"/>
-          </f:layoutData>
-          <f:header>
-            <card:Header title="{i18n>cardDetail}" subtitle="{i18n>cardDetailSub}"/>
-          </f:header>
-          <f:content>
-            <Table id="detailTable" items="{/detail}" growing="true" growingThreshold="20" mode="None"
-              sticky="ColumnHeaders">
-              <columns>
-                <Column><Text text="{i18n>colCompany}"/></Column>
-                <Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>colArea}"/></Column>
-                <Column minScreenWidth="Tablet" demandPopin="true"><Text text="{i18n>colOrgUnit}"/></Column>
-                <Column><Text text="{i18n>colStatus}"/></Column>
-                <Column hAlign="End"><Text text="{i18n>colEmployees}"/></Column>
-                <Column hAlign="End"><Text text="{i18n>colCritEmp}"/></Column>
-                <Column hAlign="End"><Text text="{i18n>colWarnEmp}"/></Column>
-                <Column hAlign="End"><Text text="{i18n>colComplPct}"/></Column>
-              </columns>
-              <items>
-                <ColumnListItem type="Navigation" press=".onDetailRowPress">
-                  <cells>
-                    <Text text="{company}"/>
-                    <Text text="{area}"/>
-                    <Text text="{orgUnit}"/>
-                    <ObjectStatus text="{status}" inverted="true"
-                      state="{= ${status} === 'CRITICAL' ? 'Error' : ${status} === 'WARNING' ? 'Warning' : 'Success' }"/>
-                    <Text text="{emp}"/>
-                    <Text text="{crit}"/>
-                    <Text text="{warn}"/>
-                    <Text text="{= ${completeness} + '%' }"/>
-                  </cells>
-                </ColumnListItem>
-              </items>
-            </Table>
-          </f:content>
-        </f:Card>
-
-      </l:Grid>
+      </VBox>
     </content>
   </Page>
   </App>

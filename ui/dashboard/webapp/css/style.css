@@ -1,17 +1,148 @@
-.dhPage .sapMPageHeader { box-shadow: none; }
+/* Employee Data Health - compact card system, aligned with the Control Tower
+   dashboard. All charts are plain SVG/CSS emitted by the controller. Colours
+   map to SAP Horizon theme tokens with literal fallbacks. */
 
-.dhCard { margin: 0 0 1rem; }
+.dhPage { background-color: var(--sapBackgroundColor, #f5f6f7); }
+.dhWrap { padding: 0 1rem 1.5rem; }
 
-/* VizFrame needs an explicit height or it collapses to nothing */
-/* width only - VizFrame height is set per chart (fixed for the donut,
-   data-driven for the bar charts so every bar shows in full) */
-.dhViz { width: 100%; }
-
-.dhBreadcrumb { padding: 0.25rem 0 0.5rem; gap: 0.25rem; }
-
-.dhPanel .sapMPanelContent { padding: 0; }
-
-.dhMuted {
+.dhIntro {
+  display: block;
   font-size: 0.8rem;
   color: var(--sapContent_LabelColor, #6a6d70);
+  margin: 0.5rem 0 0.25rem;
+}
+.dhMuted { font-size: 0.78rem; color: var(--sapContent_LabelColor, #6a6d70); }
+
+/* section header bar */
+.dhSectionBar {
+  border-bottom: 1px solid var(--sapList_BorderColor, #e2e7ec);
+  padding-bottom: 3px;
+}
+.dhCrumb {
+  font-size: 0.8rem;
+  color: var(--sapContent_LabelColor, #6a6d70);
+  font-variant-numeric: tabular-nums;
+}
+.dhSelect { min-width: 9rem; }
+
+/* severity panel */
+.dhPanel { margin: 0.25rem 0 0.5rem; }
+.dhPanel .sapMPanelContent { padding: 0; }
+
+/* ---- card grid ---- */
+.dh-grid {
+  display: grid;
+  gap: 12px;
+  margin: 10px 0 4px;
+}
+.dh-grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.dh-card {
+  background: var(--sapTile_Background, #fff);
+  border: 1px solid var(--sapList_BorderColor, #e2e7ec);
+  border-radius: 10px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 1px 2px rgba(20, 30, 40, 0.06);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.dh-card::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--sapAccentColor6, #0a6ed1), var(--sapAccentColor3, #925ace));
+  opacity: 0.85;
+}
+.dh-card-h { margin-bottom: 8px; }
+.dh-card-t { font-size: 0.84rem; font-weight: 700; line-height: 1.2; }
+.dh-card-s { font-size: 0.68rem; color: var(--sapContent_LabelColor, #6a6d70); margin-top: 2px; }
+.dh-card-b { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
+.dh-card-i {
+  font-size: 0.72rem;
+  color: var(--sapContent_LabelColor, #6a6d70);
+  border-top: 1px solid var(--sapList_BorderColor, #e2e7ec);
+  padding-top: 7px;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+.dh-card-i b { color: var(--sapTextColor, #1a2733); font-weight: 600; }
+.dh-empty { color: var(--sapContent_LabelColor, #6a6d70); font-size: 0.8rem; padding: 12px 2px; }
+
+/* ---- KPI tiles ---- */
+.dh-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 10px 0 4px;
+}
+.dh-kpi {
+  background: var(--sapTile_Background, #fff);
+  border: 1px solid var(--sapList_BorderColor, #e2e7ec);
+  border-radius: 10px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 1px 2px rgba(20, 30, 40, 0.06);
+}
+.dh-kpi-l { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sapContent_LabelColor, #6a6d70); }
+.dh-kpi-n { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--sapTextColor, #1a2733); }
+.dh-kpi-s { font-size: 0.72rem; color: var(--sapContent_LabelColor, #6a6d70); }
+.dh-kpi.dh-crit  .dh-kpi-n { color: var(--sapNegativeColor, #bb0000); }
+.dh-kpi.dh-warn  .dh-kpi-n { color: var(--sapCriticalColor, #e9730c); }
+.dh-kpi.dh-ok    .dh-kpi-n { color: var(--sapPositiveColor, #107e3e); }
+.dh-kpi.dh-score .dh-kpi-n { color: var(--sapAccentColor6, #0a6ed1); }
+
+/* ---- donut ---- */
+.dh-donut-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.dh-donut { width: 132px; height: 132px; flex: none; }
+.dh-donut-num { font-size: 17px; font-weight: 800; fill: var(--sapTextColor, #1a2733); }
+.dh-donut-cap { font-size: 8px; fill: var(--sapContent_LabelColor, #6a6d70); text-transform: uppercase; letter-spacing: 0.08em; }
+.dh-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 150px; }
+.dh-legend li { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; color: var(--sapTextColor, #1a2733); }
+.dh-legv { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+.dh-sw { width: 10px; height: 10px; border-radius: 2px; flex: none; display: inline-block; }
+.dh-legend-inline { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.72rem; color: var(--sapContent_LabelColor, #6a6d70); }
+.dh-legend-inline .dh-sw { margin-left: 8px; }
+
+/* ---- bar list ---- */
+.dh-bars { display: flex; flex-direction: column; gap: 6px; width: 100%; min-width: 0; }
+.dh-bars-org {
+  margin: 10px 0 4px;
+  max-height: 640px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.dh-bar {
+  display: grid;
+  grid-template-columns: minmax(90px, 1.3fr) minmax(24px, 1.9fr) 3.4rem 2.6rem;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.74rem;
+  padding: 3px 4px;
+  border-radius: 6px;
+  min-width: 0;
+}
+.dh-bar-click { cursor: pointer; }
+.dh-bar-click:hover { background: var(--sapList_Hover_Background, #f0f3f7); }
+.dh-bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--sapTextColor, #1a2733); }
+.dh-bar-track { height: 10px; border-radius: 5px; background: var(--sapList_Background, #eef2f6); overflow: hidden; }
+.dh-bar-fill { display: block; height: 100%; border-radius: 5px; }
+.dh-bar-val { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--sapTextColor, #1a2733); text-align: right; white-space: nowrap; }
+.dh-bar-pct { font-variant-numeric: tabular-nums; color: var(--sapContent_LabelColor, #6a6d70); text-align: right; white-space: nowrap; }
+.dh-bar-crit { font-weight: 700; color: var(--sapNegativeColor, #bb0000); }
+
+/* stacked crit/warn/ok bar inside an org row */
+.dh-stack { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--sapList_Background, #eef2f6); }
+.dh-stack > span { height: 100%; display: block; }
+
+.dh-orgfoot {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+  margin-top: 6px;
+}
+.dh-hint { font-size: 0.72rem; color: var(--sapContent_LabelColor, #6a6d70); }
+
+.dhDetail { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dh-bar-click:hover { background: none; }
 }
