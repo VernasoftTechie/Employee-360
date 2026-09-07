@@ -1,0 +1,55 @@
+{
+  "version": "CAT_2026_09",
+  "categories": [
+    { "code": "PERSONAL", "label": "Personal data" },
+    { "code": "ORG",      "label": "Organizational assignment" },
+    { "code": "PAY",      "label": "Basic pay" },
+    { "code": "BANK",     "label": "Bank & payment" },
+    { "code": "CONTACT",  "label": "Communication" },
+    { "code": "ADDRESS",  "label": "Address" },
+    { "code": "EDU",      "label": "Education & qualifications" },
+    { "code": "LEAVE",    "label": "Leave & time quotas" },
+    { "code": "DOCS",     "label": "Documents" }
+  ],
+  "checks": [
+    { "id": "MAND_DOB",     "cat": "PERSONAL", "name": "Date of birth missing",            "rule": "No date of birth on the Personal Data infotype.",                    "infotype": "Personal Data (IT0002)",        "sev": "C" },
+    { "id": "INVALID_DOB",  "cat": "PERSONAL", "name": "Date of birth in the future",      "rule": "The stored date of birth is later than today.",                      "infotype": "Personal Data (IT0002)",        "sev": "C" },
+    { "id": "MAND_GENDER",  "cat": "PERSONAL", "name": "Gender missing",                   "rule": "No gender key on the Personal Data infotype.",                       "infotype": "Personal Data (IT0002)",        "sev": "C" },
+    { "id": "STAT_NATION",  "cat": "PERSONAL", "name": "Nationality missing",              "rule": "No nationality on the Personal Data infotype.",                      "infotype": "Personal Data (IT0002)",        "sev": "C" },
+    { "id": "PERS_LASTNM",  "cat": "PERSONAL", "name": "Last name missing",                "rule": "No last name on the Personal Data infotype.",                        "infotype": "Personal Data (IT0002)",        "sev": "C" },
+    { "id": "PERS_FIRSTN",  "cat": "PERSONAL", "name": "First name missing",               "rule": "No first name on the Personal Data infotype.",                       "infotype": "Personal Data (IT0002)",        "sev": "C" },
+    { "id": "PERS_MARITAL", "cat": "PERSONAL", "name": "Marital status missing",           "rule": "No marital status key on the Personal Data infotype.",               "infotype": "Personal Data (IT0002)",        "sev": "W" },
+
+    { "id": "ORG_ORGUNIT",  "cat": "ORG", "name": "Organizational unit missing",           "rule": "No organizational unit on the Organizational Assignment infotype.",   "infotype": "Organizational Assignment (IT0001)", "sev": "C" },
+    { "id": "ORG_POSITION", "cat": "ORG", "name": "Position not assigned",                 "rule": "No position on the Organizational Assignment infotype.",              "infotype": "Organizational Assignment (IT0001)", "sev": "C" },
+    { "id": "ORG_COSTCTR",  "cat": "ORG", "name": "Cost center missing",                   "rule": "No cost center on the Organizational Assignment infotype.",           "infotype": "Organizational Assignment (IT0001)", "sev": "C" },
+    { "id": "ORG_EEGROUP",  "cat": "ORG", "name": "Employee group / subgroup missing",     "rule": "Employee group or subgroup is blank.",                               "infotype": "Organizational Assignment (IT0001)", "sev": "C" },
+    { "id": "ORG_JOB",      "cat": "ORG", "name": "Job not assigned",                      "rule": "No job on the Organizational Assignment infotype.",                   "infotype": "Organizational Assignment (IT0001)", "sev": "W" },
+    { "id": "ORG_PSUBAREA", "cat": "ORG", "name": "Personnel subarea missing",             "rule": "No personnel subarea on the Organizational Assignment infotype.",     "infotype": "Organizational Assignment (IT0001)", "sev": "W" },
+    { "id": "ORG_ADMIN",    "cat": "ORG", "name": "No HR administrator assigned",          "rule": "Payroll, time and HR administrator are all blank.",                   "infotype": "Organizational Assignment (IT0001)", "sev": "W" },
+
+    { "id": "PAY_BASICPAY", "cat": "PAY", "name": "Basic pay record missing",              "rule": "No Basic Pay infotype record valid today.",                          "infotype": "Basic Pay (IT0008)",            "sev": "C" },
+    { "id": "PSCL_TYPE",    "cat": "PAY", "name": "Pay scale type / area missing",          "rule": "Basic Pay exists but pay scale type or area is blank.",               "infotype": "Basic Pay (IT0008)",            "sev": "W" },
+    { "id": "PSCL_GRP",     "cat": "PAY", "name": "Pay scale group / level missing",        "rule": "Basic Pay exists but pay scale group or level is blank.",             "infotype": "Basic Pay (IT0008)",            "sev": "W" },
+
+    { "id": "BANK_IBAN",    "cat": "BANK", "name": "Bank details missing",                 "rule": "No IBAN and no bank key + account number on the main bank record.",   "infotype": "Bank Details (IT0009)",         "sev": "C" },
+    { "id": "BANK_PAYMETH", "cat": "BANK", "name": "Payment method missing",               "rule": "Bank record exists but the payment method is blank.",                 "infotype": "Bank Details (IT0009)",         "sev": "C" },
+
+    { "id": "CONTACT_MAIL", "cat": "CONTACT", "name": "Business email missing",            "rule": "No business email address on the Communication infotype.",            "infotype": "Communication (IT0105)",        "sev": "W" },
+    { "id": "COMM_MOBILE",  "cat": "CONTACT", "name": "Mobile number missing",             "rule": "No mobile / cell number on the Communication infotype.",              "infotype": "Communication (IT0105)",        "sev": "W" },
+
+    { "id": "CONTACT_ADDR", "cat": "ADDRESS", "name": "Address missing",                   "rule": "No permanent address record, or the country is blank.",               "infotype": "Addresses (IT0006)",           "sev": "C" },
+    { "id": "ADDR_STREET",  "cat": "ADDRESS", "name": "Street missing",                    "rule": "An address record exists but the street is blank.",                   "infotype": "Addresses (IT0006)",           "sev": "W" },
+    { "id": "ADDR_CITY",    "cat": "ADDRESS", "name": "City missing",                      "rule": "An address record exists but the city is blank.",                     "infotype": "Addresses (IT0006)",           "sev": "W" },
+    { "id": "ADDR_POSTAL",  "cat": "ADDRESS", "name": "Postal code missing",               "rule": "An address record exists but the postal code is blank.",              "infotype": "Addresses (IT0006)",           "sev": "W" },
+
+    { "id": "EDU_MISSING",  "cat": "EDU", "name": "No education record",                   "rule": "No Education infotype record on file.",                              "infotype": "Education (IT0022)",            "sev": "W" },
+    { "id": "QUAL_MISSING", "cat": "EDU", "name": "No qualification / skill",              "rule": "No Qualifications infotype record on file.",                          "infotype": "Qualifications (IT0024)",       "sev": "W" },
+    { "id": "QUAL_EXPIRED", "cat": "EDU", "name": "All qualifications expired",            "rule": "Qualifications exist but every one has lapsed.",                      "infotype": "Qualifications (IT0024)",       "sev": "W" },
+
+    { "id": "LEAVE_NOQUOTA","cat": "LEAVE", "name": "No leave quota on file",              "rule": "No Absence Quotas infotype record.",                                 "infotype": "Absence Quotas (IT2006)",      "sev": "W" },
+    { "id": "LEAVE_NEGBAL", "cat": "LEAVE", "name": "Leave balance is negative",           "rule": "A current quota has been deducted below zero.",                       "infotype": "Absence Quotas (IT2006)",      "sev": "C" },
+
+    { "id": "DOC_NONE",     "cat": "DOCS", "name": "No personnel documents on file",       "rule": "No ArchiveLink documents linked to the personnel number.",            "infotype": "ArchiveLink (TOA01)",          "sev": "W" }
+  ]
+}

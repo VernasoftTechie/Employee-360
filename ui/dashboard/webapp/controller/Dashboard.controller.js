@@ -1,224 +1,375 @@
 sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/ui/model/json/JSONModel",
-  "sap/ui/model/Filter",
-  "sap/ui/model/FilterOperator",
+  "sap/ui/core/Fragment",
   "sap/m/MessageToast"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageToast) {
+], function (Controller, JSONModel, Fragment, MessageToast) {
   "use strict";
 
-  // org drill levels
-  var L_COMPANY = 0, L_AREA = 1, L_ORGUNIT = 2;
+  var PAGE = 5000;            // OData page size for the full-roster read
+  var STORE_KEY = "hr360.dh.severity";
+
+  function pct(n, d) { return d ? Math.round(n * 1000 / d) / 10 : 0; }
+  function round1(x) { return Math.round(x * 10) / 10; }
 
   return Controller.extend("hr360.datahealth.controller.Dashboard", {
 
+    /* ------------------------------------------------------------------ init */
+
     onInit: function () {
+      this._roster = [];                 // one row per employee  (EmployeeDq)
+      this._issues = [];                 // one row per employee+failed check (DataQualityIssue)
+      this._byEmp  = {};                 // EmployeeID -> { checkId: true }
+      this._orgPath = [];                // [{ key, text }]  length = drill level (0/1/2)
+
       this._vm = new JSONModel({
-        kpi: { total: 0, critical: 0, warning: 0, clean: 0, criticalPct: 0, cleanPct: 0 },
-        status: [], checks: [], detail: [],
-        org: {
-          level: L_COMPANY,
-          path: [],                 // [{key, text}] chosen nodes
-          rows: [],
-          subtitle: "",
-          currentText: "",
-          canViewEmployees: false
-        }
+        busy: true,
+        error: "",
+        catalogue: [],                   // [{ id, cat, catLabel, name, rule, infotype, sev }]
+        checksMode: "check",             // "check" | "category"
+        orgMetric: "critPct",            // "critPct" | "critCount" | "completeness"
+        kpi:    { total: 0, critical: 0, warning: 0, clean: 0, criticalPct: 0, warningPct: 0, cleanPct: 0, completeness: 0 },
+        status: [],
+        checks: [],
+        detail: [],
+        org: { level: 0, rows: [], subtitle: "", crumbText: "", canViewEmployees: false }
       });
       this.getView().setModel(this._vm);
       this._i18n = this.getView().getModel("i18n").getResourceBundle();
-      this._loadAll();
+
+      this._loadCatalogue()
+        .then(this._loadData.bind(this))
+        .then(this._recompute.bind(this))
+        .catch(function (e) {
+          this._vm.setProperty("/error", (e && e.message) || String(e));
+        }.bind(this))
+        .finally(function () { this._vm.setProperty("/busy", false); }.bind(this));
     },
 
-    /* ---------------------------------------------------------------- loading */
+    _loadCatalogue: function () {
+      var sUrl = sap.ui.require.toUrl("hr360/datahealth/model/checkCatalogue.json");
+      return fetch(sUrl).then(function (r) { return r.json(); }).then(function (cat) {
+        var catLabel = {};
+        (cat.categories || []).forEach(function (c) { catLabel[c.code] = c.label; });
+        this._catVersion = cat.version;
+        var stored = this._readStoredSeverity();
+        var list = (cat.checks || []).map(function (c) {
+          return {
+            id: c.id, cat: c.cat, catLabel: catLabel[c.cat] || c.cat,
+            name: c.name, rule: c.rule, infotype: c.infotype,
+            sev: stored[c.id] || c.sev
+          };
+        });
+        this._catalogue = list;
+        this._catById = {};
+        list.forEach(function (c) { this._catById[c.id] = c; }.bind(this));
+        this._vm.setProperty("/catalogue", list);
+      }.bind(this));
+    },
 
-    _loadAll: function () {
-      this._setError("");
-      Promise.all([ this._loadStatusAndKpis(), this._loadChecks(), this._loadOrg() ])
-        .catch(function (e) { this._setError((e && e.message) || String(e)); }.bind(this));
+    _readStoredSeverity: function () {
+      try {
+        var raw = window.localStorage.getItem(STORE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    },
+
+    _writeStoredSeverity: function () {
+      try {
+        var map = {};
+        this._catalogue.forEach(function (c) { map[c.id] = c.sev; });
+        window.localStorage.setItem(STORE_KEY, JSON.stringify(map));
+      } catch (e) { /* private mode - ignore */ }
+    },
+
+    /* ---------------------------------------------------------------- OData */
+
+    _readAll: function (sPath) {
+      var oList = this.getView().getModel("odata").bindList(sPath, null, null, [], { $count: true });
+      var out = [];
+      function page() {
+        return oList.requestContexts(out.length, PAGE).then(function (aCtx) {
+          aCtx.forEach(function (c) { out.push(c.getObject()); });
+          var total = oList.getCount();
+          if (aCtx.length > 0 && typeof total === "number" && out.length < total) {
+            return page();
+          }
+          return out;
+        });
+      }
+      return page();
+    },
+
+    _loadData: function () {
+      return Promise.all([
+        this._readAll("/EmployeeDq"),
+        this._readAll("/DataQualityIssue")
+      ]).then(function (res) {
+        this._roster = res[0] || [];
+        this._issues = res[1] || [];
+        var byEmp = {};
+        this._issues.forEach(function (i) {
+          (byEmp[i.EmployeeID] || (byEmp[i.EmployeeID] = {}))[i.CheckID] = true;
+        });
+        this._byEmp = byEmp;
+      }.bind(this));
     },
 
     onRefresh: function () {
+      this._vm.setProperty("/busy", true);
       this.getView().getModel("odata").refresh();
-      this._loadAll();
+      this._loadData()
+        .then(this._recompute.bind(this))
+        .catch(function (e) { this._vm.setProperty("/error", (e && e.message) || String(e)); }.bind(this))
+        .finally(function () { this._vm.setProperty("/busy", false); }.bind(this));
     },
 
-    _read: function (sPath, aFilters, iTop) {
-      var oList = this.getView().getModel("odata").bindList(sPath, null, null, aFilters || [], {
-        $count: false
-      });
-      return oList.requestContexts(0, iTop || 2000).then(function (aCtx) {
-        return aCtx.map(function (c) { return c.getObject(); });
-      });
+    /* --------------------------------------------------------- aggregation */
+
+    _sevOf: function (checkId) {
+      var c = this._catById[checkId];
+      return c ? c.sev : null;              // unknown check ids are ignored
     },
 
-    _num: function (v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; },
+    _inScope: function (r) {
+      var p = this._orgPath;
+      if (p[0] && r.CompanyCode   !== p[0].key) return false;
+      if (p[1] && r.PersonnelArea !== p[1].key) return false;
+      return true;
+    },
 
-    _loadStatusAndKpis: function () {
-      return this._read("/StatusSplit").then(function (rows) {
-        var total = 0, crit = 0, warn = 0, ok = 0;
-        var chart = rows.map(function (r) {
-          var c = this._num(r.EmployeeCount);
-          total += c;
-          if (r.QualityStatus === "CRITICAL") crit = c;
-          else if (r.QualityStatus === "WARNING") warn = c;
-          else if (r.QualityStatus === "OK") ok = c;
-          return { name: r.QualityStatus, value: c };
-        }.bind(this));
-        this._vm.setProperty("/status", chart);
-        this._vm.setProperty("/kpi", {
-          total: total, critical: crit, warning: warn, clean: ok,
-          criticalPct: total ? Math.round(crit * 1000 / total) / 10 : 0,
-          cleanPct: total ? Math.round(ok * 1000 / total) / 10 : 0
+    _orgUnitLabel: function (v) {
+      return (v && v !== "00000000") ? v : this._i18n.getText("unassigned");
+    },
+
+    _recompute: function () {
+      var self  = this;
+      var level = this._orgPath.length;               // 0 company / 1 pers.area / 2 org unit
+      var N     = this._catalogue.length || 1;
+
+      var total = 0, crit = 0, warn = 0, ok = 0, passSum = 0;
+      var byCheck = {}, byCat = {}, org = {}, detail = {};
+
+      this._roster.forEach(function (r) {
+        if (!self._inScope(r)) { return; }
+        total++;
+
+        var fails = self._byEmp[r.EmployeeID] || null;
+        var hasC = false, hasW = false, failCount = 0;
+        if (fails) {
+          Object.keys(fails).forEach(function (cid) {
+            var s = self._sevOf(cid);
+            if (!s) { return; }
+            failCount++;
+            if (s === "C") { hasC = true; } else { hasW = true; }
+            byCheck[cid] = (byCheck[cid] || 0) + 1;
+            var cat = self._catById[cid].cat;
+            byCat[cat] = (byCat[cat] || 0) + 1;
+          });
+        }
+        var status = hasC ? "CRITICAL" : hasW ? "WARNING" : "OK";
+        if (status === "CRITICAL") { crit++; } else if (status === "WARNING") { warn++; } else { ok++; }
+        passSum += (N - failCount);
+
+        // org-bar node at the current drill level
+        var nk, nl;
+        if (level === 0)      { nk = r.CompanyCode;   nl = r.CompanyCode || "(none)"; }
+        else if (level === 1) { nk = r.PersonnelArea; nl = r.PersonnelArea || "(none)"; }
+        else                  { nk = r.OrgUnit;       nl = self._orgUnitLabel(r.OrgUnit); }
+        var o = org[nk] || (org[nk] = { key: nk, label: nl, emp: 0, crit: 0, warn: 0, pass: 0 });
+        o.emp++; o.pass += (N - failCount);
+        if (status === "CRITICAL") { o.crit++; } else if (status === "WARNING") { o.warn++; }
+
+        // detail table row = full org tuple
+        var dk = [r.CompanyCode, r.PersonnelArea, r.OrgUnit].join("|");
+        var d = detail[dk] || (detail[dk] = {
+          company: r.CompanyCode, area: r.PersonnelArea, orgUnit: self._orgUnitLabel(r.OrgUnit),
+          emp: 0, crit: 0, warn: 0, pass: 0
         });
-      }.bind(this));
+        d.emp++; d.pass += (N - failCount);
+        if (status === "CRITICAL") { d.crit++; } else if (status === "WARNING") { d.warn++; }
+      });
+
+      /* KPI strip */
+      this._vm.setProperty("/kpi", {
+        total: total, critical: crit, warning: warn, clean: ok,
+        criticalPct: pct(crit, total), warningPct: pct(warn, total), cleanPct: pct(ok, total),
+        completeness: total ? round1(passSum * 100 / (total * N)) : 0
+      });
+
+      /* status donut */
+      this._vm.setProperty("/status", [
+        { name: "CRITICAL", value: crit },
+        { name: "WARNING",  value: warn },
+        { name: "OK",       value: ok }
+      ].filter(function (x) { return x.value > 0; }));
+
+      /* failures by check / category */
+      this._buildChecks(byCheck, byCat);
+
+      /* org bar */
+      var metric = this._vm.getProperty("/orgMetric");
+      var orgRows = Object.keys(org).map(function (k) {
+        var o = org[k];
+        return {
+          key: o.key, label: o.label, employees: o.emp,
+          critical: o.crit, warning: o.warn,
+          critPct: pct(o.crit, o.emp),
+          completeness: o.emp ? round1(o.pass * 100 / (o.emp * N)) : 0,
+          value: metric === "critCount" ? o.crit
+               : metric === "completeness" ? (o.emp ? round1(o.pass * 100 / (o.emp * N)) : 0)
+               : pct(o.crit, o.emp)
+        };
+      });
+      orgRows.sort(function (a, b) {
+        return metric === "completeness" ? a.value - b.value : b.value - a.value;   // worst first
+      });
+      this._vm.setProperty("/org/rows", orgRows);
+      this._vm.setProperty("/org/level", level);
+      this._vm.setProperty("/org/subtitle", this._i18n.getText(
+        ["cardOrgSubL0", "cardOrgSubL1", "cardOrgSubL2"][level],
+        [this._orgPath[0] && this._orgPath[0].key, this._orgPath[1] && this._orgPath[1].key]));
+      this._vm.setProperty("/org/crumbText",
+        this._orgPath.map(function (p) { return p.key; }).join("  /  "));
+      this._vm.setProperty("/org/canViewEmployees", this._orgPath.length > 0);
+
+      /* detail table */
+      var detailRows = Object.keys(detail).map(function (k) {
+        var d = detail[k];
+        d.status = d.crit ? "CRITICAL" : d.warn ? "WARNING" : "OK";
+        d.completeness = d.emp ? round1(d.pass * 100 / (d.emp * N)) : 0;
+        return d;
+      });
+      detailRows.sort(function (a, b) { return b.crit - a.crit; });
+      this._vm.setProperty("/detail", detailRows);
     },
 
-    _loadChecks: function () {
-      return this._read("/CheckFailure").then(function (rows) {
-        rows.sort(function (a, b) { return this._num(b.FailureCount) - this._num(a.FailureCount); }.bind(this));
-        this._vm.setProperty("/checks", rows.map(function (r) {
-          return { name: r.CheckID, value: this._num(r.FailureCount) };
-        }.bind(this)));
-      }.bind(this));
-    },
-
-    /* --------------------------------------------------------------- org drill */
-
-    _orgFilters: function () {
-      var path = this._vm.getProperty("/org/path");
-      var f = [];
-      if (path[0]) f.push(new Filter("CompanyCode", FilterOperator.EQ, path[0].key));
-      if (path[1]) f.push(new Filter("PersonnelArea", FilterOperator.EQ, path[1].key));
-      return f;
-    },
-
-    _loadOrg: function () {
-      var level = this._vm.getProperty("/org/level");
-      var path = this._vm.getProperty("/org/path");
-      var src, groupBy, labelOf;
-
-      if (level === L_COMPANY) {
-        src = "/AreaHealth"; groupBy = "CompanyCode"; labelOf = function (r) { return r.CompanyCode; };
-      } else if (level === L_AREA) {
-        src = "/AreaHealth"; groupBy = "PersonnelArea"; labelOf = function (r) { return r.PersonnelArea; };
+    _buildChecks: function (byCheck, byCat) {
+      var self = this;
+      var mode = this._vm.getProperty("/checksMode");
+      var rows;
+      if (mode === "category") {
+        var seen = {};
+        this._catalogue.forEach(function (c) { seen[c.cat] = c.catLabel; });
+        rows = Object.keys(seen).map(function (code) {
+          return { key: code, name: seen[code], value: byCat[code] || 0 };
+        });
       } else {
-        src = "/KpiOverview"; groupBy = "OrgUnit"; labelOf = function (r) { return r.OrgUnit || "(none)"; };
-      }
-
-      // detail table follows the same scope
-      this._loadDetail();
-
-      return this._read(src, this._orgFilters()).then(function (rows) {
-        var agg = {};
-        rows.forEach(function (r) {
-          var k = r[groupBy] || "(none)";
-          var a = agg[k] || (agg[k] = { key: k, label: labelOf(r), employees: 0, critical: 0, passed: 0 });
-          var emp = this._num(r.EmployeeCount);
-          a.employees += emp;
-          a.critical  += this._num(r.CriticalCount);
-          // completeness back-computed: AvgCompleteness is a % -> passed-check-equivalent
-          a.passed += emp * this._num(r.AvgCompleteness) / 100;
-        }.bind(this));
-
-        var out = Object.keys(agg).map(function (k) {
-          var a = agg[k];
-          return {
-            key: a.key, label: a.label,
-            employees: a.employees, critical: a.critical,
-            completeness: a.employees ? Math.round(a.passed * 1000 / a.employees) / 10 : 0
-          };
+        rows = this._catalogue.map(function (c) {
+          return { key: c.id, name: c.name, value: byCheck[c.id] || 0 };
         });
-        out.sort(function (x, y) { return x.completeness - y.completeness; });   // worst first
-        this._vm.setProperty("/org/rows", out);
+      }
+      rows = rows.filter(function (r) { return r.value > 0; });
+      rows.sort(function (a, b) { return b.value - a.value; });
+      this._vm.setProperty("/checks", rows);
+    },
 
-        var subKey = ["cardOrgSubL0", "cardOrgSubL1", "cardOrgSubL2"][level];
-        this._vm.setProperty("/org/subtitle",
-          this._i18n.getText(subKey, [ path[0] && path[0].key, path[1] && path[1].key ]));
-        this._vm.setProperty("/org/currentText",
-          level === L_COMPANY ? "" : path.map(function (p) { return p.key; }).join(" / "));
-        this._vm.setProperty("/org/canViewEmployees", path.length > 0);
-      }.bind(this));
+    /* -------------------------------------------------------- interactions */
+
+    onChecksModeChange: function (oEvent) {
+      this._vm.setProperty("/checksMode", oEvent.getParameter("item").getKey());
+      this._recompute();
+    },
+
+    onOrgMetricChange: function (oEvent) {
+      this._vm.setProperty("/orgMetric", oEvent.getParameter("item").getKey());
+      this._recompute();
     },
 
     onOrgBarSelect: function (oEvent) {
-      var level = this._vm.getProperty("/org/level");
-      if (level >= L_ORGUNIT) {
-        // leaf: bars are org units -> open the employee list for that org unit
-        var d = oEvent.getParameter("data");
-        var node = d && d[0] && d[0].data && d[0].data.Node;
-        if (node) this._toEmployees({ OrgUnit: this._keyForLabel(node) });
+      var data  = oEvent.getParameter("data");
+      var label = data && data[0] && data[0].data && data[0].data.Node;
+      if (!label) { return; }
+      var row = (this._vm.getProperty("/org/rows") || []).filter(function (r) { return r.label === label; })[0];
+      if (!row) { return; }
+
+      if (this._orgPath.length >= 2) {
+        // leaf level - a bar is an org unit -> open the filtered employee list
+        this._toEmployees({
+          CompanyCode: this._orgPath[0].key,
+          PersonnelArea: this._orgPath[1].key,
+          OrgUnit: row.key
+        });
         return;
       }
-      var data = oEvent.getParameter("data");
-      var label = data && data[0] && data[0].data && data[0].data.Node;
-      if (!label) return;
-      var key = this._keyForLabel(label);
-      var path = this._vm.getProperty("/org/path").slice();
-      path.push({ key: key, text: label });
-      this._vm.setProperty("/org/path", path);
-      this._vm.setProperty("/org/level", level + 1);
-      this._loadOrg();
-    },
-
-    _keyForLabel: function (label) {
-      var row = (this._vm.getProperty("/org/rows") || []).filter(function (r) { return r.label === label; })[0];
-      return row ? row.key : label;
+      this._orgPath.push({ key: row.key, text: label });
+      this._recompute();
     },
 
     onOrgHome: function () {
-      this._vm.setProperty("/org/path", []);
-      this._vm.setProperty("/org/level", L_COMPANY);
-      this._loadOrg();
+      this._orgPath = [];
+      this._recompute();
+    },
+
+    onOrgUp: function () {
+      this._orgPath.pop();
+      this._recompute();
     },
 
     onViewEmployees: function () {
-      var path = this._vm.getProperty("/org/path");
       var p = {};
-      if (path[0]) p.CompanyCode = path[0].key;
-      if (path[1]) p.PersonnelArea = path[1].key;
+      if (this._orgPath[0]) { p.CompanyCode = this._orgPath[0].key; }
+      if (this._orgPath[1]) { p.PersonnelArea = this._orgPath[1].key; }
       this._toEmployees(p);
-    },
-
-    /* -------------------------------------------------------------- detail tbl */
-
-    _loadDetail: function () {
-      this._read("/KpiOverview", this._orgFilters(), 200).then(function (rows) {
-        rows.sort(function (a, b) { return this._num(b.CriticalCount) - this._num(a.CriticalCount); }.bind(this));
-        this._vm.setProperty("/detail", rows);
-      }.bind(this));
     },
 
     onDetailRowPress: function (oEvent) {
       var o = oEvent.getSource().getBindingContext().getObject();
       this._toEmployees({
-        CompanyCode: o.CompanyCode, PersonnelArea: o.PersonnelArea,
-        OrgUnit: o.OrgUnit, QualityStatus: o.QualityStatus
+        CompanyCode: o.company, PersonnelArea: o.area,
+        OrgUnit: (o.orgUnit === this._i18n.getText("unassigned") ? "" : o.orgUnit),
+        QualityStatus: o.status
       });
     },
 
-    /* ------------------------------------------------------------------ nav */
-
     _toEmployees: function (mParams) {
-      var oClean = {};
-      Object.keys(mParams).forEach(function (k) { if (mParams[k]) oClean[k] = mParams[k]; });
-
+      var clean = {};
+      Object.keys(mParams).forEach(function (k) { if (mParams[k]) { clean[k] = mParams[k]; } });
       if (sap.ushell && sap.ushell.Container) {
         sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCAN) {
-          oCAN.toExternal({
-            target: { semanticObject: "Employee", action: "display" },
-            params: oClean
-          });
+          oCAN.toExternal({ target: { semanticObject: "Employee", action: "display" }, params: clean });
         });
       } else {
-        MessageToast.show("Would open Employee 360 filtered by: " + JSON.stringify(oClean));
+        MessageToast.show(this._i18n.getText("wouldOpen", [JSON.stringify(clean)]));
       }
     },
 
-    _setError: function (sText) {
-      var s = this.byId("errStrip");
-      s.setText(sText || "");
-      s.setVisible(!!sText);
-    }
+    /* --------------------------------------------------- severity checklist */
+
+    onSeverityChange: function (oEvent) {
+      var ctx = oEvent.getSource().getBindingContext();
+      if (ctx) {
+        this._vm.setProperty(ctx.getPath() + "/sev", oEvent.getParameter("item").getKey());
+      }
+    },
+
+    onApplySeverity: function () {
+      this._writeStoredSeverity();
+      this._recompute();
+      MessageToast.show(this._i18n.getText("severityApplied"));
+    },
+
+    onResetSeverity: function () {
+      try { window.localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
+      this._loadCatalogue().then(this._recompute.bind(this));
+      MessageToast.show(this._i18n.getText("severityReset"));
+    },
+
+    /* ------------------------------------------------------------ help */
+
+    onOpenHelp: function () {
+      var self = this;
+      if (this._helpDialog) { this._helpDialog.open(); return; }
+      Fragment.load({
+        id: this.getView().getId(), name: "hr360.datahealth.view.Help", controller: this
+      }).then(function (oDialog) {
+        self.getView().addDependent(oDialog);
+        self._helpDialog = oDialog;
+        oDialog.open();
+      });
+    },
+
+    onCloseHelp: function () { if (this._helpDialog) { this._helpDialog.close(); } }
+
   });
 });

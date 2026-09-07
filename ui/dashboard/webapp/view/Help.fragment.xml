@@ -1,0 +1,73 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+
+  <Dialog title="{i18n>helpTitle}" contentWidth="42rem" contentHeight="38rem"
+    resizable="true" draggable="true">
+    <content>
+      <Panel expandable="true" expanded="true" headerText="{i18n>helpWhat}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpWhatText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpClassify}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpClassifyText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpChecklist}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpChecklistText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpDrill}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpDrillText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpCards}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpCardsText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false"
+        headerText="{i18n>helpChecks} ({= ${/catalogue}.length })">
+        <Table items="{path: '/catalogue', sorter: {path: 'catLabel', group: true}}" mode="None">
+          <columns>
+            <Column width="35%"><Text text="{i18n>colCheck}"/></Column>
+            <Column><Text text="{i18n>colRule}"/></Column>
+            <Column width="20%" hAlign="End"><Text text="{i18n>colSeverity}"/></Column>
+          </columns>
+          <items>
+            <ColumnListItem>
+              <cells>
+                <VBox><Text text="{name}"/><Text text="{infotype}" class="dhMuted"/></VBox>
+                <Text text="{rule}"/>
+                <ObjectStatus inverted="true"
+                  text="{= ${sev} === 'C' ? ${i18n>critical} : ${i18n>warning} }"
+                  state="{= ${sev} === 'C' ? 'Error' : 'Warning' }"/>
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpScope}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpScopeText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpNotCovered}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpNotCoveredText}"/>
+      </Panel>
+
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpNext}">
+        <List>
+          <StandardListItem title="{i18n>helpNext1}" wrapping="true"/>
+          <StandardListItem title="{i18n>helpNext2}" wrapping="true"/>
+          <StandardListItem title="{i18n>helpNext3}" wrapping="true"/>
+          <StandardListItem title="{i18n>helpNext4}" wrapping="true"/>
+          <StandardListItem title="{i18n>helpNext5}" wrapping="true"/>
+          <StandardListItem title="{i18n>helpNext6}" wrapping="true"/>
+        </List>
+      </Panel>
+    </content>
+    <beginButton>
+      <Button text="{i18n>close}" press=".onCloseHelp"/>
+    </beginButton>
+  </Dialog>
+</core:FragmentDefinition>
