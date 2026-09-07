@@ -32,7 +32,6 @@
         "sap.m": {},
         "sap.f": {},
         "sap.ui.layout": {},
-        "sap.suite.ui.microchart": {},
         "sap.viz": {}
       }
     },

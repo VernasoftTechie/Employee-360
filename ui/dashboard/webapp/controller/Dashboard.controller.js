@@ -1,9 +1,10 @@
 sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/ui/model/json/JSONModel",
+  "sap/ui/model/Sorter",
   "sap/ui/core/Fragment",
   "sap/m/MessageToast"
-], function (Controller, JSONModel, Fragment, MessageToast) {
+], function (Controller, JSONModel, Sorter, Fragment, MessageToast) {
   "use strict";
 
   var PAGE = 5000;            // OData page size for the full-roster read
@@ -84,8 +85,14 @@ sap.ui.define([
 
     /* ---------------------------------------------------------------- OData */
 
-    _readAll: function (sPath) {
-      var oList = this.getView().getModel("odata").bindList(sPath, null, null, [], { $count: true });
+    // Read every row of an entity set, paged. An explicit key sort is essential:
+    // without $orderby, $skip/$top paging on HANA is not guaranteed stable and
+    // rows could be missed or duplicated across pages.
+    _readAll: function (sPath, sSelect, aKeys) {
+      var mParams = { $count: true };
+      if (sSelect) { mParams.$select = sSelect; }
+      var aSorters = (aKeys || []).map(function (k) { return new Sorter(k); });
+      var oList = this.getView().getModel("odata").bindList(sPath, null, aSorters, [], mParams);
       var out = [];
       function page() {
         return oList.requestContexts(out.length, PAGE).then(function (aCtx) {
@@ -94,6 +101,7 @@ sap.ui.define([
           if (aCtx.length > 0 && typeof total === "number" && out.length < total) {
             return page();
           }
+          oList.destroy();                 // data already copied out - free the contexts
           return out;
         });
       }
@@ -102,8 +110,8 @@ sap.ui.define([
 
     _loadData: function () {
       return Promise.all([
-        this._readAll("/EmployeeDq"),
-        this._readAll("/DataQualityIssue")
+        this._readAll("/EmployeeDq", "EmployeeID,CompanyCode,PersonnelArea,OrgUnit", ["EmployeeID"]),
+        this._readAll("/DataQualityIssue", "EmployeeID,CheckID", ["EmployeeID", "CheckID"])
       ]).then(function (res) {
         this._roster = res[0] || [];
         this._issues = res[1] || [];
@@ -369,7 +377,11 @@ sap.ui.define([
       });
     },
 
-    onCloseHelp: function () { if (this._helpDialog) { this._helpDialog.close(); } }
+    onCloseHelp: function () { if (this._helpDialog) { this._helpDialog.close(); } },
+
+    onExit: function () {
+      if (this._helpDialog) { this._helpDialog.destroy(); this._helpDialog = null; }
+    }
 
   });
 });
