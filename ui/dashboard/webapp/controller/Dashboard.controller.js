@@ -38,6 +38,7 @@ sap.ui.define([
         catalogue: [],                   // [{ id, cat, catLabel, name, rule, infotype, sev }]
         checksMode: "check",             // "check" | "category"
         orgSort: "worst",                // "worst" | "largest"
+        orgLimit: "8",                   // how many org bars to show ("999" = all)
         kpi: { total: 0, critical: 0, warning: 0, clean: 0, completeness: 0 },
         org: { level: 0, crumbText: "", scopeText: "" },
         detail: [],
@@ -112,8 +113,11 @@ sap.ui.define([
     // Read every row of an entity set. One request for a big window; only loop
     // if the window came back completely full (i.e. there might be more).
     // Explicit key $orderby keeps $skip/$top paging stable on HANA.
+    // Read every row of an entity set. The gateway caps a response below the
+    // requested $top, so "stop when the window isn't full" is wrong - loop
+    // against $count instead. Explicit key $orderby keeps paging stable.
     _readAll: function (sPath, sSelect, aKeys) {
-      var mParams = {};
+      var mParams = { $count: true };
       if (sSelect) { mParams.$select = sSelect; }
       var aSorters = (aKeys || []).map(function (k) { return new Sorter(k); });
       var oList = this.getView().getModel("odata").bindList(sPath, null, aSorters, [], mParams);
@@ -121,7 +125,8 @@ sap.ui.define([
       function page() {
         return oList.requestContexts(out.length, PAGE).then(function (aCtx) {
           aCtx.forEach(function (c) { out.push(c.getObject()); });
-          if (aCtx.length === PAGE) { return page(); }   // full window - probably more
+          var total = oList.getCount();
+          if (aCtx.length > 0 && typeof total === "number" && out.length < total) { return page(); }
           oList.destroy();
           return out;
         });
@@ -403,8 +408,10 @@ sap.ui.define([
     },
 
     _orgHtml: function (org, total) {
-      var sort = this._vm.getProperty("/orgSort");
+      var sort  = this._vm.getProperty("/orgSort");
+      var limit = parseInt(this._vm.getProperty("/orgLimit"), 10) || 8;
       var level = this._orgPath.length;
+
       var rows = Object.keys(org).map(function (k) {
         var o = org[k];
         o.critPct = pct(o.crit, o.emp);
@@ -414,7 +421,8 @@ sap.ui.define([
         ? function (a, b) { return b.emp - a.emp; }
         : function (a, b) { return b.critPct - a.critPct || b.crit - a.crit; });
 
-      var body = rows.map(function (o) {
+      var shown = rows.slice(0, limit);
+      var body = shown.map(function (o) {
         var drill = level < 2 ? "in" : "emp";
         return '<div class="dh-bar dh-bar-click" data-drill="' + drill + '" data-key="' + this._esc(o.key) + '" ' +
           'title="' + this._esc(o.label + ": " + o.crit + " critical / " + o.warn + " warning / " + o.ok + " ok of " + o.emp) + '">' +
@@ -431,14 +439,21 @@ sap.ui.define([
           worst.critPct + "% (" + nf(worst.crit) + " " + this._i18n.getText("ofN", [nf(worst.emp)]) + ")."
         : this._i18n.getText("noData");
       var hint = level < 2 ? this._i18n.getText("drillHint") : this._i18n.getText("drillHintLeaf");
+      var count = rows.length > shown.length
+        ? this._i18n.getText("orgShowingOf", [shown.length, rows.length])
+        : this._i18n.getText("orgShowingAll", [rows.length]);
 
-      return '<div class="dh-bars dh-bars-org">' + body + '</div>' +
+      // ONE root element - sap.ui.core.HTML appends (instead of replacing) when
+      // its content has more than one top-level node.
+      return '<div class="dh-orgwrap">' +
+        '<div class="dh-bars dh-bars-org">' + body + '</div>' +
         '<div class="dh-orgfoot"><span class="dh-legend-inline">' +
         '<span class="dh-sw" style="background:' + COL.CRITICAL + '"></span>' + this._esc(this._i18n.getText("stCRITICAL")) +
         '<span class="dh-sw" style="background:' + COL.WARNING + '"></span>' + this._esc(this._i18n.getText("stWARNING")) +
         '<span class="dh-sw" style="background:' + COL.OK + '"></span>' + this._esc(this._i18n.getText("stOK")) +
-        '</span><span class="dh-hint">' + this._esc(hint) + '</span></div>' +
-        '<div class="dh-card-i">' + insight + '</div>';
+        '</span><span class="dh-hint">' + this._esc(count) + '  ·  ' + this._esc(hint) + '</span></div>' +
+        '<div class="dh-card-i">' + insight + '</div>' +
+        '</div>';
     },
 
     /* ======================================================= interactions */
@@ -466,6 +481,11 @@ sap.ui.define([
 
     onOrgSortChange: function (oEvent) {
       this._vm.setProperty("/orgSort", oEvent.getParameter("selectedItem").getKey());
+      this._recompute();
+    },
+
+    onOrgLimitChange: function (oEvent) {
+      this._vm.setProperty("/orgLimit", oEvent.getParameter("selectedItem").getKey());
       this._recompute();
     },
 

@@ -93,7 +93,14 @@
           <Button icon="sap-icon://nav-back" text="{i18n>drillUp}" type="Transparent"
             visible="{= ${/org/level} > 0 }" press=".onOrgUp"/>
           <ToolbarSpacer/>
-          <Label text="{i18n>rankBy}" class="dhMuted sapUiTinyMarginEnd"/>
+          <Label text="{i18n>showLbl}" class="dhMuted sapUiTinyMarginEnd"/>
+          <Select selectedKey="{/orgLimit}" change=".onOrgLimitChange" class="dhSelectSm">
+            <core:Item key="5" text="{i18n>showTop5}"/>
+            <core:Item key="8" text="{i18n>showTop8}"/>
+            <core:Item key="15" text="{i18n>showTop15}"/>
+            <core:Item key="999" text="{i18n>showAll}"/>
+          </Select>
+          <Label text="{i18n>rankBy}" class="dhMuted sapUiTinyMarginBegin sapUiTinyMarginEnd"/>
           <Select selectedKey="{/orgSort}" change=".onOrgSortChange" class="dhSelect">
             <core:Item key="worst" text="{i18n>sortWorst}"/>
             <core:Item key="largest" text="{i18n>sortLargest}"/>

@@ -268,3 +268,9 @@ a belt-and-suspenders guard.
 "list per group" use a bitmask (`sum( case … then 2^i … end )`), and keep the bit
 order pinned to the client-side catalogue.
 | — | Dashboard polish (same commit): org bars show **`code · business name`** (new `ZI_/ZC_HR360_DIM_TEXT` UNION over `T001` + `T500P`, exposed as `DimensionText`, read once; org units stay IDs — HRP1000 is plan-version/validity dependent, deferred). Softer status shades (`--dhCrit #d9576a` etc. — a monitoring view, not an alarm), 8px bars, tighter rows. | — | v0.44 |
+
+| U7 | 🔴 Dashboard: only ~5,000 employees' worth of org bars load (4 companies); and every drill-down click leaves its "finding + legend" line stacked on the page. | (1) v0.44's `_readAll` stopped paging when a window came back not-full — but the **gateway caps a response below the requested `$top`**, so the first (capped) page looked "not full" and the loop stopped at ~5k rows. (2) `_orgHtml` returned **three top-level `<div>`s**; `sap.ui.core.HTML` only manages the first root node on re-render, so the 2nd/3rd (legend + finding) were appended as strays and accumulated on every recompute. | (1) `_readAll` back to the `$count: true` + `getCount()` loop. (2) `_orgHtml` wrapped in a single `<div class="dh-orgwrap">`. Also: org bars now show **Top 5 / 8 / 15 / All** via a `sap.m.Select` (default Top 8) with a "Showing 8 of 23" line, per the client's "show top 5 first, let them add more" ask. | v0.46 |
+
+**Rule:** every `sap.ui.core.HTML` `content` string must have exactly **one root
+element**. And never assume `requestContexts(0, N)` returns N — the gateway
+page-caps; loop against `$count`.

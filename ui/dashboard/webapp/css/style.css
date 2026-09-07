@@ -33,6 +33,7 @@
   font-variant-numeric: tabular-nums;
 }
 .dhSelect { min-width: 9rem; }
+.dhSelectSm { min-width: 5.5rem; }
 
 /* severity panel */
 .dhPanel { margin: 0.25rem 0 0.5rem; }
