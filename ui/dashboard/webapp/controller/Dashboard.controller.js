@@ -83,6 +83,8 @@ sap.ui.define([
             sev: stored[c.id] || c.sev
           };
         });
+        // bit i = 2^i, matched to the CASE order in ZI_HR360_EMP_KPI.FailureBitmask
+        list.forEach(function (c, i) { c.bit = Math.pow(2, i); });
         this._catalogue = list;
         this._catById = {};
         list.forEach(function (c) { this._catById[c.id] = c; }.bind(this));
@@ -127,31 +129,36 @@ sap.ui.define([
       return page();
     },
 
-    // One paged read of EmployeeDq only. FailedChecks (a comma list of CheckIDs
-    // built server-side) replaces paging the whole DataQualityIssue union - that
-    // was ~90k rows over 18 deep-offset pages of an aggregating view (A35).
+    // One paged read of EmployeeDq only. FailureBitmask (bit i = catalogue check
+    // i, built server-side) replaces paging the whole DataQualityIssue union -
+    // that was ~90k rows over 18 deep-offset pages of an aggregating view (A35).
     _loadData: function () {
+      var self = this;
       return Promise.all([
         this._readAll("/EmployeeDq",
-          "EmployeeID,CompanyCode,PersonnelArea,OrgUnit,FailedChecks", ["EmployeeID"]),
+          "EmployeeID,CompanyCode,PersonnelArea,OrgUnit,FailureBitmask", ["EmployeeID"]),
         this._readAll("/DimensionText", "DimType,DimCode,DimText", ["DimType", "DimCode"])
           .catch(function () { return []; })            // texts are optional - fall back to codes
       ]).then(function (res) {
-        this._roster = res[0] || [];
-        this._dimText = { COMPANY: {}, PERSAREA: {} };
+        self._roster = res[0] || [];
+        self._dimText = { COMPANY: {}, PERSAREA: {} };
         (res[1] || []).forEach(function (t) {
-          (this._dimText[t.DimType] || (this._dimText[t.DimType] = {}))[t.DimCode] = t.DimText;
-        }.bind(this));
+          (self._dimText[t.DimType] || (self._dimText[t.DimType] = {}))[t.DimCode] = t.DimText;
+        });
 
+        var cat = self._catalogue;
         var byEmp = {};
-        this._roster.forEach(function (r) {
-          if (!r.FailedChecks) { return; }
+        self._roster.forEach(function (r) {
+          var bm = parseInt(r.FailureBitmask, 10) || 0;            // 0..2^31-1 -> JS int32 & works
+          if (!bm) { return; }
           var set = {};
-          String(r.FailedChecks).split(",").forEach(function (c) { if (c) { set[c] = true; } });
+          for (var i = 0; i < cat.length; i++) {
+            if (bm & cat[i].bit) { set[cat[i].id] = true; }
+          }
           byEmp[r.EmployeeID] = set;
         });
-        this._byEmp = byEmp;
-      }.bind(this));
+        self._byEmp = byEmp;
+      });
     },
 
     // "1000" -> "1000 · Dangote Cement PLC" when the name is known.
