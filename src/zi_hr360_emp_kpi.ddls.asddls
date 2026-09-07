@@ -28,7 +28,12 @@ define view entity ZI_HR360_EMP_KPI
       end                                                                       as QualityStatusCriticality,
 
       // catalogue size (CAT_2026_09 increment B = 31 checks) - bump with ZI_HR360_ISSUE branch count
-      cast( division( ( 31 - count( distinct Iss.CheckID ) ) * 100, 31, 2 ) as abap.dec( 6, 2 ) ) as CompletenessPercent
+      cast( division( ( 31 - count( distinct Iss.CheckID ) ) * 100, 31, 2 ) as abap.dec( 6, 2 ) ) as CompletenessPercent,
+
+      // comma list of failed CheckIDs - the dashboard reads ONLY this (via
+      // ZC_HR360_EMP_DQ) and does every aggregation client-side, instead of
+      // paging the whole DataQualityIssue union (BUILD_ISSUES_LOG A35).
+      string_agg( Iss.CheckID, ',' )                                          as FailedChecks
 }
 group by
   Emp.EmployeeID

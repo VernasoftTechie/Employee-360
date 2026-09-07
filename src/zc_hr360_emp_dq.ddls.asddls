@@ -6,12 +6,13 @@
   typeNamePlural: 'Employees'
 }
 
-// One row per employee: org assignment + how many catalogue checks the employee
-// fails. The dashboard pages ALL rows of this + DataQualityIssue and does every
-// aggregation client-side (docs/16 section 3). EMP_BASIC inner join EMP_KPI;
-// GROUP BY every column (all functionally determined by the employee) so a
-// duplicate PA0002 slice cannot produce a duplicate EmployeeID key in OData V4
-// (BUILD_ISSUES_LOG A34). No real aggregate -> no A28 dump risk.
+// One row per employee: org assignment + the comma list of failed CheckIDs.
+// The dashboard reads ONLY this entity (one paged request) and does every
+// aggregation client-side (docs/16 section 3, BUILD_ISSUES_LOG A35 - it no
+// longer touches the DataQualityIssue union at all).
+// EMP_BASIC inner join EMP_KPI; GROUP BY every column (all functionally
+// determined by the employee) so a duplicate PA0002 slice cannot produce a
+// duplicate EmployeeID key in OData V4 (A34). No real aggregate -> no A28 risk.
 // DCL of ZI_HR360_EMP_BASIC applies.
 
 define view entity ZC_HR360_EMP_DQ
@@ -48,7 +49,9 @@ define view entity ZC_HR360_EMP_DQ
       b.CostCenter         as CostCenter,
 
       @UI.lineItem:       [{ position: 90 }]
-      k.TotalIssueCount    as FailedCheckCount
+      k.TotalIssueCount    as FailedCheckCount,
+
+      k.FailedChecks       as FailedChecks
 }
 group by
   b.EmployeeID,
@@ -59,4 +62,5 @@ group by
   b.EmployeeSubgroup,
   b.OrgUnit,
   b.CostCenter,
-  k.TotalIssueCount
+  k.TotalIssueCount,
+  k.FailedChecks

@@ -2,6 +2,15 @@
    dashboard. All charts are plain SVG/CSS emitted by the controller. Colours
    map to SAP Horizon theme tokens with literal fallbacks. */
 
+/* softer status shades than the raw error/warning tokens - the dashboard is a
+   monitoring view, not an error state, so a whole-bar red should read as
+   "attention" not "alarm" */
+:root {
+  --dhCrit: #d9576a;
+  --dhWarn: #e8974a;
+  --dhOk:   #3aa06a;
+}
+
 .dhPage { background-color: var(--sapBackgroundColor, #f5f6f7); }
 .dhWrap { padding: 0 1rem 1.5rem; }
 
@@ -104,34 +113,37 @@
 .dh-legend-inline .dh-sw { margin-left: 8px; }
 
 /* ---- bar list ---- */
-.dh-bars { display: flex; flex-direction: column; gap: 6px; width: 100%; min-width: 0; }
+.dh-bars { display: flex; flex-direction: column; gap: 3px; width: 100%; min-width: 0; }
 .dh-bars-org {
-  margin: 10px 0 4px;
-  max-height: 640px;
+  margin: 8px 0 4px;
+  max-height: 560px;
   overflow-y: auto;
   padding-right: 4px;
 }
+.dh-bars-org .dh-bar {
+  grid-template-columns: minmax(140px, 2.2fr) minmax(24px, 1.7fr) 3.2rem 2.4rem;
+}
 .dh-bar {
   display: grid;
-  grid-template-columns: minmax(90px, 1.3fr) minmax(24px, 1.9fr) 3.4rem 2.6rem;
+  grid-template-columns: minmax(84px, 1.2fr) minmax(24px, 2fr) 3.2rem 2.4rem;
   align-items: center;
   gap: 10px;
-  font-size: 0.74rem;
-  padding: 3px 4px;
-  border-radius: 6px;
+  font-size: 0.72rem;
+  padding: 2px 4px;
+  border-radius: 5px;
   min-width: 0;
 }
 .dh-bar-click { cursor: pointer; }
 .dh-bar-click:hover { background: var(--sapList_Hover_Background, #f0f3f7); }
 .dh-bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--sapTextColor, #1a2733); }
-.dh-bar-track { height: 10px; border-radius: 5px; background: var(--sapList_Background, #eef2f6); overflow: hidden; }
-.dh-bar-fill { display: block; height: 100%; border-radius: 5px; }
+.dh-bar-track { height: 8px; border-radius: 4px; background: var(--sapList_Background, #eef2f6); overflow: hidden; }
+.dh-bar-fill { display: block; height: 100%; border-radius: 4px; }
 .dh-bar-val { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--sapTextColor, #1a2733); text-align: right; white-space: nowrap; }
 .dh-bar-pct { font-variant-numeric: tabular-nums; color: var(--sapContent_LabelColor, #6a6d70); text-align: right; white-space: nowrap; }
-.dh-bar-crit { font-weight: 700; color: var(--sapNegativeColor, #bb0000); }
+.dh-bar-crit { font-weight: 700; color: var(--dhCrit, #d9576a); }
 
 /* stacked crit/warn/ok bar inside an org row */
-.dh-stack { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--sapList_Background, #eef2f6); }
+.dh-stack { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--sapList_Background, #eef2f6); }
 .dh-stack > span { height: 100%; display: block; }
 
 .dh-orgfoot {

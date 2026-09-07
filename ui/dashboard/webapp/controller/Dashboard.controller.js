@@ -7,14 +7,15 @@ sap.ui.define([
 ], function (Controller, JSONModel, Sorter, Fragment, MessageToast) {
   "use strict";
 
-  var PAGE = 5000;                       // OData page size for the full-roster read
+  var PAGE = 20000;                      // OData page size for the roster read
   var STORE_KEY = "hr360.dh.severity";
 
-  // Status colours - the same red / orange / green everywhere.
+  // Status colours - softened shades (see :root --dh* in style.css). A whole
+  // bar in these should read as "needs attention", not "alarm".
   var COL = {
-    CRITICAL: "var(--sapNegativeColor, #bb0000)",
-    WARNING:  "var(--sapCriticalColor, #e9730c)",
-    OK:       "var(--sapPositiveColor, #107e3e)"
+    CRITICAL: "var(--dhCrit, #d9576a)",
+    WARNING:  "var(--dhWarn, #e8974a)",
+    OK:       "var(--dhOk, #3aa06a)"
   };
   var ACCENT = "var(--sapAccentColor6, #0a6ed1)";
 
@@ -106,8 +107,11 @@ sap.ui.define([
 
     /* ---------------------------------------------------------------- OData */
 
+    // Read every row of an entity set. One request for a big window; only loop
+    // if the window came back completely full (i.e. there might be more).
+    // Explicit key $orderby keeps $skip/$top paging stable on HANA.
     _readAll: function (sPath, sSelect, aKeys) {
-      var mParams = { $count: true };
+      var mParams = {};
       if (sSelect) { mParams.$select = sSelect; }
       var aSorters = (aKeys || []).map(function (k) { return new Sorter(k); });
       var oList = this.getView().getModel("odata").bindList(sPath, null, aSorters, [], mParams);
@@ -115,8 +119,7 @@ sap.ui.define([
       function page() {
         return oList.requestContexts(out.length, PAGE).then(function (aCtx) {
           aCtx.forEach(function (c) { out.push(c.getObject()); });
-          var total = oList.getCount();
-          if (aCtx.length > 0 && typeof total === "number" && out.length < total) { return page(); }
+          if (aCtx.length === PAGE) { return page(); }   // full window - probably more
           oList.destroy();
           return out;
         });
@@ -124,18 +127,39 @@ sap.ui.define([
       return page();
     },
 
+    // One paged read of EmployeeDq only. FailedChecks (a comma list of CheckIDs
+    // built server-side) replaces paging the whole DataQualityIssue union - that
+    // was ~90k rows over 18 deep-offset pages of an aggregating view (A35).
     _loadData: function () {
       return Promise.all([
-        this._readAll("/EmployeeDq", "EmployeeID,CompanyCode,PersonnelArea,OrgUnit", ["EmployeeID"]),
-        this._readAll("/DataQualityIssue", "EmployeeID,CheckID", ["EmployeeID", "CheckID"])
+        this._readAll("/EmployeeDq",
+          "EmployeeID,CompanyCode,PersonnelArea,OrgUnit,FailedChecks", ["EmployeeID"]),
+        this._readAll("/DimensionText", "DimType,DimCode,DimText", ["DimType", "DimCode"])
+          .catch(function () { return []; })            // texts are optional - fall back to codes
       ]).then(function (res) {
         this._roster = res[0] || [];
+        this._dimText = { COMPANY: {}, PERSAREA: {} };
+        (res[1] || []).forEach(function (t) {
+          (this._dimText[t.DimType] || (this._dimText[t.DimType] = {}))[t.DimCode] = t.DimText;
+        }.bind(this));
+
         var byEmp = {};
-        (res[1] || []).forEach(function (i) {
-          (byEmp[i.EmployeeID] || (byEmp[i.EmployeeID] = {}))[i.CheckID] = true;
+        this._roster.forEach(function (r) {
+          if (!r.FailedChecks) { return; }
+          var set = {};
+          String(r.FailedChecks).split(",").forEach(function (c) { if (c) { set[c] = true; } });
+          byEmp[r.EmployeeID] = set;
         });
         this._byEmp = byEmp;
       }.bind(this));
+    },
+
+    // "1000" -> "1000 · Dangote Cement PLC" when the name is known.
+    _orgNodeLabel: function (level, key) {
+      if (level === 2) { return this._orgUnitLabel(key); }
+      var m = this._dimText && this._dimText[level === 0 ? "COMPANY" : "PERSAREA"];
+      var t = m && m[key];
+      return t ? (key + "  ·  " + t) : (key || "(none)");
     },
 
     onRefresh: function () {
@@ -202,11 +226,10 @@ sap.ui.define([
         if (status === "CRITICAL") { crit++; } else if (status === "WARNING") { warn++; } else { ok++; }
         passSum += (N - failCount);
 
-        var nk, nl;
-        if (level === 0)      { nk = r.CompanyCode;   nl = r.CompanyCode || "(none)"; }
-        else if (level === 1) { nk = r.PersonnelArea; nl = r.PersonnelArea || "(none)"; }
-        else                  { nk = r.OrgUnit;       nl = self._orgUnitLabel(r.OrgUnit); }
-        var o = org[nk] || (org[nk] = { key: nk, label: nl, emp: 0, crit: 0, warn: 0, ok: 0 });
+        var nk = level === 0 ? r.CompanyCode : level === 1 ? r.PersonnelArea : r.OrgUnit;
+        var o = org[nk] || (org[nk] = {
+          key: nk, label: self._orgNodeLabel(level, nk), emp: 0, crit: 0, warn: 0, ok: 0
+        });
         o.emp++; o[status === "CRITICAL" ? "crit" : status === "WARNING" ? "warn" : "ok"]++;
 
         var dk = [r.CompanyCode, r.PersonnelArea, r.OrgUnit].join("|");
