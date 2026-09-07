@@ -163,8 +163,8 @@ branch); **T2** = one small new source view over a standard infotype.
 | CheckID | Check | Rule | Default |
 |---|---|---|---|
 | `PAY_BASICPAY` * | Basic pay record missing | no PA0008 valid today | Critical |
-| `PSCL_TYPEAREA` | Pay scale type / area missing | `TRFAR` or `TRFGB` initial | Warning |
-| `PSCL_GRPLEVEL` | Pay scale group / level missing | `TRFGR` or `TRFST` initial | Warning |
+| `PSCL_TYPE` | Pay scale type / area missing | `TRFAR` or `TRFGB` initial | Warning |
+| `PSCL_GRP` | Pay scale group / level missing | `TRFGR` or `TRFST` initial | Warning |
 
 ### Bank & Payment  (PA0009 via `ZI_HR360_EMP_BANK`)
 
@@ -281,7 +281,7 @@ Shipped in code, overridable per user (§2.1).
 `EMP_STATINC`, `WT_NOSCHED`.
 
 **Warning (default) — 26:** `PERS_MARITAL`, `PERS_LANG`, `ORG_JOB`,
-`ORG_PSUBAREA`, `ORG_ADMIN`, `PSCL_TYPEAREA`, `PSCL_GRPLEVEL`, `ADDR_STREET`,
+`ORG_PSUBAREA`, `ORG_ADMIN`, `PSCL_TYPE`, `PSCL_GRP`, `ADDR_STREET`,
 `ADDR_CITY`, `ADDR_POSTAL`, `CONTACT_MAIL`, `COMM_MOBILE`, `EDU_MISSING`,
 `QUAL_MISSING`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `DOC_NONE`, `ID_EXPIRED`,
 `EMP_NOHIRE`, `EMP_RETIRE`, `WT_CAPACITY`, `WT_HOURS`, `CT_NOTYPE`, `CT_FIXNOEND`,
@@ -484,3 +484,47 @@ added/changed.
 
 Tooltips use `sap.m` `tooltip` / `sap.ui.core.Popup` where richer content is
 needed; all text comes from i18n so it is translatable.
+
+### 13.4 Enhancement suggestions shown to the user
+
+The Help panel ends with a **"Where you could take this next"** list — framed as
+options for the customer, not commitments:
+
+1. **Turn on the parked Payroll checks** (§7) once the payroll configuration is
+   confirmed — wage-type presence, pay-scale completeness, tax & social-insurance
+   infotypes.
+2. **Add the Tier 3 checks** (§9) — cost-centre validity in CO, position/org-unit
+   existence in OM, org-assignment gap analysis, retirement-age vs status.
+3. **Schedule a periodic snapshot** — persist the daily counts so the dashboard
+   can show a trend line ("critical employees down 4 % this month") instead of
+   only today's picture.
+4. **Push worklists to HR administrators** — email each `SACHP`/`SACHZ` owner the
+   list of their employees failing Critical checks, so the numbers actually move.
+5. **Org-wide severity policy** — instead of each user choosing, let an HR admin
+   publish one approved Critical/Warning mapping everyone sees by default (needs a
+   small settings store — arrives with the BTP/CAP rebuild, `docs/15`).
+6. **Bring the drill down to employee level** — from a bar or the detail table,
+   open the filtered Employee 360 list, then the individual 360 page, then the
+   infotype in SAP GUI / Fiori to fix it.
+7. **Add a "fix-by" target** — mark checks with an SLA (e.g. bank details within
+   3 days of hire) and report on breaches, not just presence.
+8. **Export** the current scope to spreadsheet for offline distribution.
+
+---
+
+## 14. Build status
+
+| Increment | Contents | Catalogue branches | Commit | State |
+|---|---|---|---|---|
+| **A** | `ZC_HR360_EMP_DQ` roster view; `ZI_HR360_ISSUE` + `DataQualityIssue` extended with 6 org fields; Tier-1 checks needing no source-view change (`PERS_LASTNM`, `PERS_FIRSTN`, `ORG_ORGUNIT`, `ORG_JOB`, `ORG_EEGROUP`, `ORG_PSUBAREA`, `PSCL_TYPE`, `PSCL_GRP`, `COMM_MOBILE`); `BANK_IBAN` loosened (IBAN **or** bank key + account); completeness divisor 12 → 21 in the 3 aggregate views; test class refreshed | **21** | v0.36 | awaiting import + activation + preview |
+| B | source-view field adds (`FAMST`, `SPRSL`, `SACHA/P/Z`, `ZLSCH`, address breakdown), PA2006 + TOA01 presence views, remaining Tier-1 branches, `INVALID_DOB` age bounds, `ZI_HR360_CHECK_CATALOG` (removes the hard-coded divisor) | ~34 | — | not started |
+| C | Tier-2 source views (PA0185/PA0000/PA0007/PA0016/PA0021) + BNKA join + branches | ~46 | — | not started |
+| D | dashboard controller + view rewrite (client-side aggregation, drill propagation) | — | — | not started |
+| E | severity checklist panel + persistence | — | — | not started |
+| F | chart fixes (§10) | — | — | not started |
+| G | Help panel + tooltips + `Checks` catalogue source (§13) | — | — | not started |
+
+**The completeness divisor is a literal (`21`) in `ZI_HR360_EMP_KPI`,
+`ZI_HR360_EMPLOYEE`, `ZC_HR360_KPI_OVERVIEW`** — increment B replaces it with a
+count from `ZI_HR360_CHECK_CATALOG`. Until then, bump all three together with the
+`ZI_HR360_ISSUE` branch count.

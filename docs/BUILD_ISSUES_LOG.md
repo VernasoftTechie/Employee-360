@@ -164,3 +164,43 @@ extension, not blind in the CDS.
 | — | `Component-preload.js` → 404 on `npm start` | **Expected.** `Component-preload.js` is a build-time bundle; `ui5 serve` serves unbundled source and UI5 loads modules individually. It appears after `npm run build` / `npm run deploy`. Not an error. | — |
 | U3 | 🔴 Dashboard: page **header renders** ("Employee Data Health") but the **entire content area is blank** — no cards, no charts, not even the static sub-title `Text`. No JS exception. HAR confirms all 4 OData reads (`StatusSplit`/`CheckFailure`/`KpiOverview`/`AreaHealth`) return **200 with data**. | **Height collapse.** The root control of `Dashboard.view.xml` was a bare `sap.m.Page`. A `Page` is `height:100%` of its parent; as the component's root view its parent chain resolved to `height:auto` → `0`, so `.sapMPageScrollContainer` (absolute, `top:<hdr> bottom:0`) had zero/negative height and clipped all content. The header sits outside the scroll container, so it stayed visible — the classic "header shows, body blank" signature. | Wrapped the `Page` in `sap.m.App` (`<App id="app">…</App>` — the standard `sap.m` root container, `sapMNav` = `height:100%`), added `height="100%"` to the `mvc:View`, and `data-height="100%" data-width="100%"` + `html,body{height:100%;margin:0}` to `index.html`. | v0.35 |
 | U4 | `$batch` POST → **403 "CSRF token is invalid"**, immediately followed by a `HEAD /` token fetch and a successful `$batch` retry (200). | **Normal OData V4 self-healing.** The model sends `X-CSRF-Token: Fetch` on the first `$batch`; this gateway rejects an unknown token with 403 instead of just returning a fresh one, so the model does a `HEAD` to fetch the token and retries once. Net result is correct data; the 403 is one noisy line in the console, not a failure. | no fix needed — documented |
+
+---
+
+## I. Dashboard v2 — interactive severity (docs/16)
+
+**Increment A (v0.36) — watch points on import / "Activate All Inactive":**
+
+1. `ZI_HR360_ISSUE` went from 12 → **21 UNION branches**, each now also projects
+   `CompanyCode / PersonnelArea / PersonnelSubarea / EmployeeGroup / OrgUnit /
+   CostCenter` (non-key). Every branch must still carry `key EmployeeID` +
+   `key CheckID` and identical element names (A5/A6) — verified 21/21 before commit.
+2. New checks reference only fields already exposed by the source views
+   (`LastName`, `FirstName`, `OrgUnit`, `Job`, `EmployeeGroup`,
+   `EmployeeSubgroup`, `PersonnelSubarea`, `PayScaleType/Area/Group/Level`,
+   `MobileNumber`) — no new infotype access, no text joins.
+3. `BANK_IBAN` rule loosened: fires only when `IBAN is initial AND (BankKey is
+   initial OR BankAccount is initial)` — an employee with local bank key +
+   account but no IBAN is **no longer flagged**.
+4. **Completeness divisor** changed `12 → 21` in `ZI_HR360_EMP_KPI`,
+   `ZI_HR360_EMPLOYEE`, `ZC_HR360_KPI_OVERVIEW`. If the Object Page gauge shows a
+   value > 100 % or < 0 %, a divisor was missed. Increment B removes the literal
+   (via `ZI_HR360_CHECK_CATALOG`).
+5. New view `ZC_HR360_EMP_DQ` — `EMP_BASIC inner join EMP_KPI`, **no GROUP BY, no
+   aggregate** (just projects `k.TotalIssueCount as FailedCheckCount`), so it is
+   *lower* dump-risk than `ZC_HR360_KPI_OVERVIEW`. Exposed as entity set
+   `EmployeeDq`. If preview dumps, fall back to reading `ZI_HR360_EMP_KPI`
+   (no org fields — would need a join client-side).
+6. Service definition `ZHR360_UI_SRVD` gained `expose ZC_HR360_EMP_DQ as
+   EmployeeDq;`. The **service binding** `ZHR360_UI_SRVB_O4` must be
+   re-activated / re-published for the new entity set to appear
+   (`/IWFND/V4_ADMIN` or just re-activate the binding object).
+7. Test class `ZCL_HR360_ISSUE_TEST` was refreshed — the old
+   `put_complete_employee` set `employmentstatus` (field removed in A11, so the
+   class had not compiled since) and did not populate the fields the new checks
+   read. Now populates all of them + adds 4 methods.
+8. abapGit: 3 new files for `ZC_HR360_EMP_DQ` (`.asddls` no BOM, `.ddls.xml`
+   **with** BOM, `.ddls.baseinfo` `FROM: [ZI_HR360_EMP_BASIC, ZI_HR360_EMP_KPI]`).
+   All other changed files keep their existing `.xml` / `.baseinfo` (labels and
+   FROM lists unchanged). After a clean import, do abapGit **Stage → Commit from
+   SAP** once so the repo mirrors the system's serialization (per G4).

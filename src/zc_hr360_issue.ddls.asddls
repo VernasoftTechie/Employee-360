@@ -32,5 +32,27 @@ define view entity ZC_HR360_ISSUE
 
       @UI.lineItem:       [{ position: 60 }]
       @UI.identification: [{ position: 60 }]
-      FieldName
+      FieldName,
+
+      @UI.lineItem:       [{ position: 70 }]
+      @UI.selectionField: [{ position: 30 }]
+      CompanyCode,
+
+      @UI.lineItem:       [{ position: 80 }]
+      @UI.selectionField: [{ position: 40 }]
+      PersonnelArea,
+
+      @UI.lineItem:       [{ position: 90 }]
+      PersonnelSubarea,
+
+      @UI.lineItem:       [{ position: 100 }]
+      @UI.selectionField: [{ position: 50 }]
+      EmployeeGroup,
+
+      @UI.lineItem:       [{ position: 110 }]
+      @UI.selectionField: [{ position: 60 }]
+      OrgUnit,
+
+      @UI.lineItem:       [{ position: 120 }]
+      CostCenter
 }

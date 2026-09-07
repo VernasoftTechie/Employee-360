@@ -2,7 +2,8 @@
 "!
 "! Tests ZI_HR360_ISSUE (the UNION check framework) in isolation from real PA
 "! data, using the CDS Test Double Framework. Adapted from
-"! HR_DataQuality_RAP_PoC. Extend with one method per branch as needed.
+"! HR_DataQuality_RAP_PoC. One method per representative branch; keep
+"! put_complete_employee in sync with every check that reads a field.
 CLASS zcl_hr360_issue_test DEFINITION
   PUBLIC
   FINAL
@@ -27,9 +28,13 @@ CLASS zcl_hr360_issue_test DEFINITION
     CLASS-METHODS class_teardown.
     METHODS setup.
 
-    METHODS full_employee_no_issues FOR TESTING.
-    METHODS missing_dob_flagged     FOR TESTING.
-    METHODS missing_iban_flagged    FOR TESTING.
+    METHODS full_employee_no_issues   FOR TESTING.
+    METHODS missing_dob_flagged       FOR TESTING.
+    METHODS missing_iban_flagged      FOR TESTING.
+    METHODS local_bank_key_is_ok      FOR TESTING.
+    METHODS missing_orgunit_flagged   FOR TESTING.
+    METHODS missing_mobile_flagged    FOR TESTING.
+    METHODS incomplete_payscale_flag  FOR TESTING.
 
     METHODS put_complete_employee IMPORTING iv_pernr TYPE pernr_d.
     METHODS insert_all.
@@ -65,16 +70,36 @@ CLASS zcl_hr360_issue_test IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD put_complete_employee.
+    " every field that any ZI_HR360_ISSUE branch inspects must be non-initial here
     td_basic = VALUE #( BASE td_basic
-      ( employeeid = iv_pernr lastname = 'Doe' firstname = 'Jane'
-        dateofbirth = '19900101' gender = 'F' nationality = 'US'
-        costcenter = '0000001000' positionid = '99999999'
-        orgunit = '50000001' companycode = '1000' employmentstatus = '3' ) ).
-    td_pay     = VALUE #( BASE td_pay     ( employeeid = iv_pernr trfgr = 'A1' ) ).
-    td_contact = VALUE #( BASE td_contact ( employeeid = iv_pernr emailaddress = 'jane.doe@corp.com' country = 'US' ) ).
-    td_bank    = VALUE #( BASE td_bank    ( employeeid = iv_pernr iban = 'DE00000000000000000000' ) ).
-    td_edu     = VALUE #( BASE td_edu     ( employeeid = iv_pernr educationtypecode = '0001' validfrom = '20100101' ) ).
-    td_qual    = VALUE #( BASE td_qual    ( employeeid = iv_pernr qualificationid = 'Q0000001' validfrom = '20150101' ) ).
+      ( employeeid       = iv_pernr
+        lastname         = 'Doe'
+        firstname        = 'Jane'
+        dateofbirth      = '19900101'
+        gender           = 'F'
+        nationality      = 'US'
+        companycode      = '1000'
+        personnelarea    = '1000'
+        personnelsubarea = '0001'
+        employeegroup    = '1'
+        employeesubgroup = 'U2'
+        orgunit          = '50000001'
+        costcenter       = '0000001000'
+        positionid       = '99999999'
+        job              = '50000123' ) ).
+    td_pay     = VALUE #( BASE td_pay
+      ( employeeid = iv_pernr payscaletype = '01' payscalearea = '01'
+        payscalegroup = 'A1' payscalelevel = '01' ) ).
+    td_contact = VALUE #( BASE td_contact
+      ( employeeid = iv_pernr emailaddress = 'jane.doe@corp.com'
+        mobilenumber = '+1 555 0100' country = 'US' ) ).
+    td_bank    = VALUE #( BASE td_bank
+      ( employeeid = iv_pernr iban = 'DE00000000000000000000'
+        bankkey = '10000000' bankaccount = '1234567890' ) ).
+    td_edu     = VALUE #( BASE td_edu
+      ( employeeid = iv_pernr educationtypecode = '0001' validfrom = '20100101' ) ).
+    td_qual    = VALUE #( BASE td_qual
+      ( employeeid = iv_pernr qualificationid = 'Q0000001' validfrom = '20150101' ) ).
   ENDMETHOD.
 
   METHOD insert_all.
@@ -104,13 +129,46 @@ CLASS zcl_hr360_issue_test IMPLEMENTATION.
   METHOD missing_dob_flagged.
     put_complete_employee( '00000002' ).
     td_basic[ employeeid = '00000002' ]-dateofbirth = '00000000'.
-    cl_abap_unit_assert=>assert_equals( act = count_check( iv_pernr = '00000002' iv_check = 'MAND_DOB' ) exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = count_check( iv_pernr = '00000002' iv_check = 'MAND_DOB' ) exp = 1 ).
   ENDMETHOD.
 
   METHOD missing_iban_flagged.
     put_complete_employee( '00000003' ).
-    td_bank[ employeeid = '00000003' ]-iban = ''.
-    cl_abap_unit_assert=>assert_equals( act = count_check( iv_pernr = '00000003' iv_check = 'BANK_IBAN' ) exp = 1 ).
+    td_bank[ employeeid = '00000003' ]-iban        = ''.
+    td_bank[ employeeid = '00000003' ]-bankkey     = ''.
+    td_bank[ employeeid = '00000003' ]-bankaccount = ''.
+    cl_abap_unit_assert=>assert_equals(
+      act = count_check( iv_pernr = '00000003' iv_check = 'BANK_IBAN' ) exp = 1 ).
+  ENDMETHOD.
+
+  METHOD local_bank_key_is_ok.
+    " IBAN blank but bank key + account present -> NOT an issue (rule loosened)
+    put_complete_employee( '00000004' ).
+    td_bank[ employeeid = '00000004' ]-iban = ''.
+    cl_abap_unit_assert=>assert_equals(
+      act = count_check( iv_pernr = '00000004' iv_check = 'BANK_IBAN' ) exp = 0 ).
+  ENDMETHOD.
+
+  METHOD missing_orgunit_flagged.
+    put_complete_employee( '00000005' ).
+    td_basic[ employeeid = '00000005' ]-orgunit = '00000000'.
+    cl_abap_unit_assert=>assert_equals(
+      act = count_check( iv_pernr = '00000005' iv_check = 'ORG_ORGUNIT' ) exp = 1 ).
+  ENDMETHOD.
+
+  METHOD missing_mobile_flagged.
+    put_complete_employee( '00000006' ).
+    td_contact[ employeeid = '00000006' ]-mobilenumber = ''.
+    cl_abap_unit_assert=>assert_equals(
+      act = count_check( iv_pernr = '00000006' iv_check = 'COMM_MOBILE' ) exp = 1 ).
+  ENDMETHOD.
+
+  METHOD incomplete_payscale_flag.
+    put_complete_employee( '00000007' ).
+    td_pay[ employeeid = '00000007' ]-payscalegroup = ''.
+    cl_abap_unit_assert=>assert_equals(
+      act = count_check( iv_pernr = '00000007' iv_check = 'PSCL_GRP' ) exp = 1 ).
   ENDMETHOD.
 
 ENDCLASS.
