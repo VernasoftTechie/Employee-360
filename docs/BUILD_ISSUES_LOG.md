@@ -239,6 +239,11 @@ extension, not blind in the CDS.
 8. `ZI_HR360_ISSUE.ddls.baseinfo` FROM list extended with `ZI_HR360_DOCUMENT`,
    `ZI_HR360_LEAVE`, `ZI_HR360_LEAVE_NEG`, `ZI_HR360_QUAL_STATUS`. 2 new
    `.ddls.xml` (BOM) + `.baseinfo` for the helper views.
+**Increment D–G / review (v0.39–v0.40) — dashboard:**
+
+| U5 | 🟡 (caught in review, not yet observed) Client reads the **whole** `DataQualityIssue` (~60–90 k rows) and `EmployeeDq` (~41 k) by `$skip`/`$top` paging. Without `$orderby`, HANA `LIMIT/OFFSET` order is **not stable between pages** → rows silently missed or duplicated → wrong roster / wrong counts. | `_readAll` now passes a `Sorter` per key (`EmployeeID` for `EmployeeDq`; `EmployeeID`,`CheckID` for `DataQualityIssue`) → the V4 model sends `$orderby` and paging is deterministic. Also added `$select` (big payload cut) and `oList.destroy()` after each read. | v0.40 |
+| — | Model-naming (U1), i18n locales (U2), `sap.m.App` height (U3) — **all re-verified intact** in the rewrite. `@UI` on `ZC_HR360_EMP_DQ` is the A32 safe set (headerInfo + lineItem + selectionField only). | — | v0.39 |
+
 9. Test class `ZCL_HR360_ISSUE_TEST` — `put_complete_employee` now also fills the
    new `EMP_BASIC` fields + payment method + street/city/postal + a valid leave
    quota + a document + a non-expired qual; +4 test methods. `ZI_HR360_LEAVE` and
