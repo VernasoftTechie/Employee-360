@@ -145,7 +145,7 @@ branch); **T2** = one small new source view over a standard infotype.
 | `PERS_LASTNM` | Last name missing | `NACHN` initial | Critical |
 | `PERS_FIRSTN` | First name missing | `VORNA` initial | Critical |
 | `PERS_MARITAL` | Marital status missing | `FAMST` initial | Warning |
-| `PERS_LANG` | Language key missing | `SPRSL` initial | Warning |
+| `PERS_LANG` | Language key missing | `SPRSL` initial — **deferred** (LANG type cannot be `cast`; select raw in increment C) | Warning |
 
 ### Organizational Assignment  (PA0001 — already in `ZI_HR360_EMP_BASIC`)
 
@@ -282,7 +282,7 @@ Shipped in code, overridable per user (§2.1).
 `BANK_XFERNOBK`, `CONTACT_ADDR`, `LEAVE_NEGBAL`, `ID_NATIONAL`,
 `EMP_STATINC`, `WT_NOSCHED`.
 
-**Warning (default) — 26:** `PERS_MARITAL`, `PERS_LANG`, `ORG_JOB`,
+**Warning (default) — 25:** `PERS_MARITAL`, `ORG_JOB`,
 `ORG_PSUBAREA`, `ORG_ADMIN`, `PSCL_TYPE`, `PSCL_GRP`, `ADDR_STREET`,
 `ADDR_CITY`, `ADDR_POSTAL`, `CONTACT_MAIL`, `COMM_MOBILE`, `EDU_MISSING`,
 `QUAL_MISSING`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `DOC_NONE`, `ID_EXPIRED`,
@@ -519,7 +519,7 @@ options for the customer, not commitments:
 | Increment | Contents | Catalogue branches | Commit | State |
 |---|---|---|---|---|
 | **A** | `ZC_HR360_EMP_DQ` roster view; `ZI_HR360_ISSUE` + `DataQualityIssue` extended with 6 org fields; Tier-1 checks needing no source-view change (`PERS_LASTNM`, `PERS_FIRSTN`, `ORG_ORGUNIT`, `ORG_JOB`, `ORG_EEGROUP`, `ORG_PSUBAREA`, `PSCL_TYPE`, `PSCL_GRP`, `COMM_MOBILE`); `BANK_IBAN` loosened (IBAN **or** bank key + account); completeness divisor 12 → 21 in the 3 aggregate views; test class refreshed | **21** | v0.36 | ✅ imported & activated by ABAP |
-| **B** | `ZI_HR360_EMP_BASIC` += `FAMST`/`SPRSL`/`SACHA-P-Z`; `ZI_HR360_EMP_BANK` += `ZLSCH`; 2 helper views (`ZI_HR360_QUAL_STATUS`, `ZI_HR360_LEAVE_NEG`); +11 checks (`PERS_MARITAL`, `PERS_LANG`, `ORG_ADMIN`, `BANK_PAYMETH`, `ADDR_STREET`, `ADDR_CITY`, `ADDR_POSTAL`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `LEAVE_NEGBAL`, `DOC_NONE`); divisor 21 → 32; test class +4 methods | **32** | v0.37 | awaiting import + activation + preview |
+| **B** | `ZI_HR360_EMP_BASIC` += `FAMST`/`SACHA-P-Z`; `ZI_HR360_EMP_BANK` += `ZLSCH`; 2 helper views (`ZI_HR360_QUAL_STATUS`, `ZI_HR360_LEAVE_NEG`); +10 checks (`PERS_MARITAL`, `ORG_ADMIN`, `BANK_PAYMETH`, `ADDR_STREET`, `ADDR_CITY`, `ADDR_POSTAL`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `LEAVE_NEGBAL`, `DOC_NONE`); divisor 21 → 31; test class +4 methods | **31** | v0.38 | awaiting import + activation + preview |
 | C | Tier-2 source views (PA0185/PA0000/PA0007/PA0016/PA0021) + BNKA join + branches; `PERS_DOBAGE` (deferred from B — needs `dats_add_days` syntax verified); `ZI_HR360_CHECK_CATALOG` (removes the hard-coded divisor) | ~45 | — | not started |
 | D | dashboard controller + view rewrite (client-side aggregation, drill propagation) | — | — | not started |
 | E | severity checklist panel + persistence | — | — | not started |

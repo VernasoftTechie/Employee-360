@@ -28,7 +28,6 @@ define view entity ZI_HR360_EMP_BASIC
       P.gesch as Gender,
       P.natio as Nationality,
       P.famst as MaritalStatus,
-      cast( P.sprsl as abap.char( 1 ) ) as LanguageKey,
       O.sachp as PayrollAdmin,
       O.sachz as TimeAdmin,
       O.sacha as HrAdmin

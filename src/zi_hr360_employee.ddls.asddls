@@ -57,6 +57,6 @@ define view entity ZI_HR360_EMPLOYEE
         else cast( 3 as abap.int4 )
       end                                                       as QualityStatusCriticality,
 
-      // catalogue size (CAT_2026_09 increment B = 32 checks) - bump with ZI_HR360_ISSUE branch count
-      cast( division( ( 32 - coalesce( Kpi.TotalIssueCount, 0 ) ) * 100, 32, 1 ) as abap.dec( 5, 1 ) ) as CompletenessPercent
+      // catalogue size (CAT_2026_09 increment B = 31 checks) - bump with ZI_HR360_ISSUE branch count
+      cast( division( ( 31 - coalesce( Kpi.TotalIssueCount, 0 ) ) * 100, 31, 1 ) as abap.dec( 5, 1 ) ) as CompletenessPercent
 }

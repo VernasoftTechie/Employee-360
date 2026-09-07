@@ -11,7 +11,7 @@
 // default seed used by the Employee 360 object page.
 // Org fields (CompanyCode..CostCenter) are projected on EVERY branch so the
 // dashboard can group/filter failures by organisation without a join.
-// ACTIVE BRANCH COUNT = 32  (catalogue CAT_2026_09, increment B).
+// ACTIVE BRANCH COUNT = 31  (catalogue CAT_2026_09, increment B).
 
 define view entity ZI_HR360_ISSUE
   as select from ZI_HR360_EMP_BASIC as Emp
@@ -444,25 +444,6 @@ union all
       Emp.CostCenter                                       as CostCenter
 }
 where Emp.MaritalStatus is initial
-
-union all
-  select from ZI_HR360_EMP_BASIC as Emp
-{
-  key Emp.EmployeeID                                       as EmployeeID,
-  key cast( 'PERS_LANG' as abap.char( 12 ) )               as CheckID,
-      cast( 'PERSONAL' as abap.char( 20 ) )                as Category,
-      cast( 'W' as abap.char( 1 ) )                        as Severity,
-      cast( 2 as abap.int4 )                               as SeverityCriticality,
-      cast( 'Language key is missing' as abap.char( 60 ) ) as IssueDescription,
-      cast( 'LanguageKey' as abap.char( 30 ) )             as FieldName,
-      Emp.CompanyCode                                      as CompanyCode,
-      Emp.PersonnelArea                                    as PersonnelArea,
-      Emp.PersonnelSubarea                               as PersonnelSubarea,
-      Emp.EmployeeGroup                                    as EmployeeGroup,
-      Emp.OrgUnit                                          as OrgUnit,
-      Emp.CostCenter                                       as CostCenter
-}
-where Emp.LanguageKey is initial
 
 union all
   select from ZI_HR360_EMP_BASIC as Emp

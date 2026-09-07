@@ -87,7 +87,6 @@ CLASS zcl_hr360_issue_test IMPLEMENTATION.
         gender           = 'F'
         nationality      = 'US'
         maritalstatus    = '1'
-        languagekey      = 'E'
         companycode      = '1000'
         personnelarea    = '1000'
         personnelsubarea = '0001'

@@ -44,6 +44,12 @@ commit, re-activating each time. Slower per feature, far fewer dead rounds.
 **Rule:** never expose a raw PA-infotype `BEGDA`/`ENDDA`/`GBDAT`/`DESTA`/`DEEND`/…
 date to OData. Always `cast( x as abap.dats )`. Times → `cast( x as abap.tims )`.
 
+| A33 | 🔴 `Error in SELECTLIST_ENTRY LANGUAGEKEY of entity ZI_HR360_EMP_BASIC` / **"CAST: Source type LANG is not supported"** (v0.37, increment B) — cascaded "column MARITALSTATUS / HRADMIN / … is unknown" to `ZI_HR360_ISSUE` | `cast( P.sprsl as abap.char( 1 ) )` — a `LANG`-typed field **cannot be `cast`** in a CDS view entity (unlike `DATS`/`TIMS`, A24). | Dropped `LanguageKey` + the `PERS_LANG` check. A `LANG` field can be selected **raw** (`P.sprsl as LanguageKey`) — the cast is what fails — but it was only feeding a `WHERE … is initial`, so it was cheaper to drop. `FAMST` and `SACHA/SACHP/SACHZ` in the same change activated fine (the "search help for HrAdmin not inherited" line is a harmless **warning**). Divisor 32 → **31**. | v0.38 |
+
+**Rule:** `LANG` fields — select raw, never `cast`. Aliasing a field that has an
+elementary search help (e.g. `SACHA`) emits a harmless "search help not inherited"
+warning; ignore it.
+
 | A25 | 🔴 **Fiori preview**: loads to a **blank white screen**, no error | A Fiori Elements List Report renders **nothing** without `@UI` annotations — at minimum `@UI.headerInfo` + one `@UI.lineItem`. The service had zero UI annotations (metadata extensions were removed in C2/A18 because the hand-written abapGit DDLX format failed to import). | v0.17: added **minimal `@UI` inline** in `ZC_HR360_EMPLOYEE` / `ZC_HR360_ISSUE` (headerInfo, ~8 lineItems, ~4 selectionFields, criticality on QualityStatus). Rulebook §2 wants these in a Metadata Extension — that move happens once the correct abapGit DDLX serialization is confirmed by creating one MDE in ADT and reading back how abapGit serializes it. | v0.17 |
 | A26 | 🔴 **Fiori preview**: List Report renders with filter bar + columns, but **"Go" returns no rows** (tested in client 400) | Under investigation. Candidates: (a) the `P_ORGIN` DCL denies every row because the previewing user has no HR display authorization; (b) no PA0001/PA0002 data in that client; (c) test data's `BEGDA`/`ENDDA` not valid on the system date. | v0.18 diagnostic: temporarily `#NOT_REQUIRED` on the anchor views (DCL off) + `pa0002` INNER→LEFT JOIN. If rows appear → authorization (assign a role with `P_ORGIN` activity Display, or relax the DCL); restore `#CHECK`. If still empty → data/date issue in that client. | v0.18 |
 
