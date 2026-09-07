@@ -9,7 +9,8 @@ define view entity ZI_HR360_EMP_BANK
       bankl as BankKey,
       bankn as BankAccount,
       bkont as BankControlKey,
-      iban  as IBAN
+      iban  as IBAN,
+      zlsch as PaymentMethod
 }
 where subty = '0'
   and begda <= $session.system_date

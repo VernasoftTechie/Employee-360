@@ -51,9 +51,9 @@ define view entity ZC_HR360_KPI_OVERVIEW
       cast( sum( k.WarningIssueCount ) as abap.int4 )                   as WarningCount,
       @UI.lineItem: [{ position: 110 }]
       @Aggregation.default: #AVG
-      // catalogue size (CAT_2026_09 increment A = 21 checks) - bump with ZI_HR360_ISSUE branch count
-      cast( division( sum( 21 - k.TotalIssueCount ) * 100,
-                      count( * ) * 21, 2 ) as abap.dec( 6, 2 ) )        as AvgCompleteness
+      // catalogue size (CAT_2026_09 increment B = 32 checks) - bump with ZI_HR360_ISSUE branch count
+      cast( division( sum( 32 - k.TotalIssueCount ) * 100,
+                      count( * ) * 32, 2 ) as abap.dec( 6, 2 ) )        as AvgCompleteness
 }
 group by
   b.CompanyCode,

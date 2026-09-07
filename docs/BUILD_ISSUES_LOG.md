@@ -204,3 +204,39 @@ extension, not blind in the CDS.
    All other changed files keep their existing `.xml` / `.baseinfo` (labels and
    FROM lists unchanged). After a clean import, do abapGit **Stage → Commit from
    SAP** once so the repo mirrors the system's serialization (per G4).
+
+**Increment B (v0.37) — watch points:**
+
+1. `ZI_HR360_ISSUE` → **32 branches** (21 → 32). Same key/element rules verified
+   32/32.
+2. **New source-view fields** — `ZI_HR360_EMP_BASIC` += `MaritalStatus` (P.famst),
+   `LanguageKey` (`cast( P.sprsl as abap.char( 1 ) )` — cast strips the SPRAS
+   conversion exit, A24-style), `PayrollAdmin` (O.sachp), `TimeAdmin` (O.sachz),
+   `HrAdmin` (O.sacha). `ZI_HR360_EMP_BANK` += `PaymentMethod` (zlsch). **If any
+   of `SPRSL`/`SACHA`/`SACHP`/`SACHZ`/`ZLSCH` errors "column unknown", it is on
+   that infotype — fix the one line, they are all standard PA0001/PA0002/PA0009
+   fields (not text-table joins, A10).**
+3. **2 helper views** — `ZI_HR360_QUAL_STATUS` (per-employee qual counts, for
+   `QUAL_EXPIRED`), `ZI_HR360_LEAVE_NEG` (employees with a current negative quota,
+   for `LEAVE_NEGBAL`). Both group-by views over existing `ZI_` views.
+4. `LEAVE_NOQUOTA` / `DOC_NONE` reuse the `EDU_MISSING` pattern (left join to
+   `ZI_HR360_LEAVE` / `ZI_HR360_DOCUMENT`, `where …EmployeeID is initial`).
+5. `ADDR_STREET/CITY/POSTAL` fire only when `Con.Country is not initial` (address
+   record exists) so they don't double-count the "no address" case that
+   `CONTACT_ADDR` already owns. `ADDR_COUNTRY` folded into `CONTACT_ADDR`.
+6. **`PERS_DOBAGE` deferred to increment C** — the age bound needs
+   `dats_add_days( date, n, on_error )` and the `on_error` literal
+   (`'NULL'` / `'INITIAL'` / `'FAIL'`) must be confirmed on this release before
+   it goes into the 32-branch view (one bad function call fails the whole view).
+7. Divisor 21 → **32** in `ZI_HR360_EMP_KPI`, `ZI_HR360_EMPLOYEE`,
+   `ZC_HR360_KPI_OVERVIEW`.
+8. `ZI_HR360_ISSUE.ddls.baseinfo` FROM list extended with `ZI_HR360_DOCUMENT`,
+   `ZI_HR360_LEAVE`, `ZI_HR360_LEAVE_NEG`, `ZI_HR360_QUAL_STATUS`. 2 new
+   `.ddls.xml` (BOM) + `.baseinfo` for the helper views.
+9. Test class `ZCL_HR360_ISSUE_TEST` — `put_complete_employee` now also fills the
+   new `EMP_BASIC` fields + payment method + street/city/postal + a valid leave
+   quota + a document + a non-expired qual; +4 test methods. `ZI_HR360_LEAVE` and
+   `ZI_HR360_DOCUMENT` added to the CDS test-double dependency list;
+   `QUAL_STATUS` / `LEAVE_NEG` left out (they compute from the doubled
+   `QUALIF` / `LEAVE`). Unit-test failures do **not** block activation — run them
+   after import and report.
