@@ -1,12 +1,12 @@
 # 16 — Interactive Data-Health Dashboard: user-defined severity + org-scoped drill
 
-**Status:** approved for build — Tier 1 first
+**Status:** approved for build — **Tier 1 + Tier 2 together** (v1). Payroll parked (§7).
 **Date:** 2026-09-07
 **Applies to:** the S/4 on-stack build (`ui/dashboard`, CDS in `src/`).
 The same interaction model carries to the BTP/CAP rebuild (`docs/15`) — only the
 data source swaps.
-**Catalogue version:** `CAT_2026_09` (Tier 1). Completeness % is relative to the
-checks active in this catalogue version — see §6.
+**Catalogue version:** `CAT_2026_09` — **46 checks** (Tier 1 ≈ 34 + Tier 2 ≈ 12).
+Completeness % is relative to the checks active in this catalogue version — §6.
 
 ---
 
@@ -66,41 +66,47 @@ status = CRITICAL  if failedCritical
 
 ## 3. Data design
 
-### 3.1 One new view — `ZC_HR360_EMP_DQ`
+Two data sets, both read with proven CDS patterns — **no `string_agg`, no
+aggregate-over-aggregate, no A28 dump risk.**
 
-One row per employee. Built with the working `ZI_HR360_EMP_KPI` pattern
-(`ZI_HR360_EMP_BASIC` left join `ZI_HR360_ISSUE`, group by employee) — no
-aggregate-over-aggregate, no A28 dump risk.
+### 3.1 `ZC_HR360_EMP_DQ` — the roster (one row per employee)
+
+Built with the working `ZI_HR360_EMP_KPI` pattern (`ZI_HR360_EMP_BASIC` left join
+`ZI_HR360_ISSUE`, group by employee + the org fields).
 
 | Field | Type | Note |
 |---|---|---|
 | `EmployeeID` | key | |
-| `CompanyCode` | | from PA0001 |
-| `PersonnelArea` | | |
-| `PersonnelSubarea` | | |
-| `EmployeeGroup` | | |
-| `OrgUnit` | | `'00000000'` → treated as unassigned |
-| `CostCenter` | | |
+| `CompanyCode` `PersonnelArea` `PersonnelSubarea` `EmployeeGroup` `EmployeeSubgroup` `OrgUnit` `CostCenter` | | from PA0001; `OrgUnit` `'00000000'` → shown as `(unassigned)` |
 | `FailedCheckCount` | int4 | `count( distinct Iss.CheckID )` |
-| `FailedChecks` | string | comma list, e.g. `MAND_DOB,BANK_IBAN` — `string_agg( Iss.CheckID, ',' )` |
 
-Exposed as entity set **`EmployeeDq`** on `ZHR360_UI_SRVD`.
+Exposed as entity set **`EmployeeDq`**. Needed for the total population, the
+completeness denominator, and the **OK employees** (who have no issue rows).
 
-*Fallback if `string_agg` misbehaves on this release:* keep `ZC_HR360_EMP_DQ`
-without `FailedChecks`, and additionally page the existing issue-grain
-`DataQualityIssue` entity (one row per employee+check) — the client joins the two
-by `EmployeeID`. `ZC_HR360_EMP_DQ` is still needed for the OK population (no issue
-rows).
+### 3.2 `DataQualityIssue` — the failures (one row per employee + failed check)
 
-### 3.2 Client-side aggregation
+The existing entity, from `ZI_HR360_ISSUE`. **Extended** with the org fields
+(`CompanyCode, PersonnelArea, PersonnelSubarea, EmployeeGroup, OrgUnit,
+CostCenter`) — `ZI_HR360_ISSUE` already selects from `ZI_HR360_EMP_BASIC`, so this
+is just projecting columns it already has. Lets the client filter/group failures
+by org without a join.
 
-- On load the dashboard pages **all** `EmployeeDq` rows into memory
-  (~41,439 rows ≈ 3–4 MB JSON, ≈ 400 KB gzipped; 2–4 s first load).
+Fields the client uses: `EmployeeID, CheckID, CategoryCode` + the org fields.
+(`Severity` / `IssueDescription` stay for tooltips but the client ignores the CDS
+severity — that is now the user's runtime choice.)
+
+### 3.3 Client-side aggregation
+
+- On load the dashboard pages **all** `EmployeeDq` rows (~41,439 ≈ 2 MB, ≈ 250 KB
+  gzipped) **and all** `DataQualityIssue` rows (~60–90 k ≈ 3 MB, ≈ 300 KB
+  gzipped). Total first load ≈ 4–6 s.
+- Builds `Map<EmployeeID, Set<CheckID>>` from the issues; every roster employee
+  not in the map (or with an empty set) is OK.
 - Holds the severity map from `localStorage` / default.
 - Every visual is a pure function of `(rows in current org scope, severity map)`:
   - **KPI strip** — counts of total / CRITICAL / WARNING / OK, plus % for each.
   - **Status donut** — the same three buckets.
-  - **Failures by check** — `FailedChecks` exploded and counted; toggle
+  - **Failures by check** — `DataQualityIssue` counted by `CheckID`; toggle
     per-check ↔ per-category.
   - **Org bar** — group rows by the current drill level; measure = **% critical**
     (default) with a toggle to **# critical** and **avg completeness %**.
@@ -112,7 +118,7 @@ rows).
 - Drill / severity change = re-run the in-memory aggregation. No server round-trip
   after the initial load. Re-compute < 100 ms.
 
-### 3.3 Existing views
+### 3.4 Existing views
 
 `ZC_HR360_DQ_BY_STATUS`, `ZC_HR360_DQ_BYCHECK`, `ZC_HR360_DQ_BY_AREA`,
 `ZC_HR360_KPI_OVERVIEW` stay (used by the Fiori Elements previews / other
@@ -120,11 +126,12 @@ consumers) but **no longer drive the dashboard**.
 
 ---
 
-## 4. Check catalogue — Tier 1 (v1 build)
+## 4. Check catalogue — v1 (Tier 1 + Tier 2)
 
-Every Tier-1 check needs **no new infotype access** — only field additions to the
-six source views already in the build, plus `UNION` branches in
-`ZI_HR360_ISSUE`. `CheckID` ≤ 12 chars. "Rule" = condition that raises the issue.
+`CheckID` ≤ 12 chars. "Rule" = the condition that raises the issue. `Src` column:
+**T1** = no new infotype access (field add to an existing source view + a `UNION`
+branch); **T2** = one small new source view over a standard infotype.
+`*` = already implemented today (rule unchanged except `BANK_IBAN`, loosened).
 
 ### Personal Data  (PA0002 — already in `ZI_HR360_EMP_BASIC`)
 
@@ -203,17 +210,63 @@ first and add these two right after.)*
 | `LEAVE_NOQUOTA` | No leave quota / entitlement | zero PA2006 rows valid this year | Warning |
 | `LEAVE_NEGBAL` | Negative leave balance | `ANZHL − KVERB` < 0 on any current quota | Critical |
 
-### Documents  (ArchiveLink TOA01)
+### Documents  (ArchiveLink TOA01)  — T1
 
 | CheckID | Check | Rule | Default |
 |---|---|---|---|
 | `DOC_NONE` | No documents on file | zero TOA01 entries for the PREL object | Warning |
 
+---
+
+### Identification & Statutory  (PA0185 — new view `ZI_HR360_EMP_ID`)  — T2
+
+| CheckID | Check | Rule | Default |
+|---|---|---|---|
+| `ID_NATIONAL` | National ID / identity document missing | zero PA0185 records valid today (or: no record of the client's national-ID subtype — §12 Q2) | Critical |
+| `ID_EXPIRED` | All identity documents expired | ≥ 1 PA0185 record and every one has expiry (`ICNUM` date / `ENDDA`) < today | Warning |
+
+### Employment & Status  (PA0000 — new view `ZI_HR360_EMP_STATUS`)  — T2
+
+| CheckID | Check | Rule | Default |
+|---|---|---|---|
+| `EMP_NOHIRE` | No hiring action on record | zero PA0000 records, or no record with a hire-category action (§12 Q3) | Warning |
+| `EMP_STATINC` | Employment status inconsistent | `STAT2` = active but no PA0001/PA0002 valid today, **or** `STAT2` = withdrawn but infotypes valid today | Critical |
+| `EMP_RETIRE` | Active employee past retirement age | `STAT2` active and age ≥ retirement threshold (default **60** — §12 Q1) | Warning |
+
+### Working Time  (PA0007 — new view `ZI_HR360_EMP_WTIME`)  — T2
+
+| CheckID | Check | Rule | Default |
+|---|---|---|---|
+| `WT_NOSCHED` | Work schedule rule missing | no PA0007 valid today, or `SCHKZ` initial | Critical |
+| `WT_CAPACITY` | Capacity utilisation / employment percent zero | `EMPCT` = 0 | Warning |
+| `WT_HOURS` | Weekly working hours zero | `WOSTD` = 0 | Warning |
+
+### Contract  (PA0016 — new view `ZI_HR360_EMP_CONTRACT`)  — T2
+
+| CheckID | Check | Rule | Default |
+|---|---|---|---|
+| `CT_NOTYPE` | Contract type missing | no PA0016 valid today, or `CTTYP` initial | Warning |
+| `CT_FIXNOEND` | Fixed-term contract with no end date | `CTTYP` maintained and `CTEDT` (contract end) initial | Warning |
+
+### Emergency & Family  (PA0021 — new view `ZI_HR360_EMP_FAMILY`)  — T2
+
+| CheckID | Check | Rule | Default |
+|---|---|---|---|
+| `FAM_NOEMERG` | No emergency contact | zero PA0021 subtype `6` records (§12 Q4) | Warning |
+
+### Bank — referential  (BNKA join in `ZI_HR360_EMP_BANK`)  — T2
+
+| CheckID | Check | Rule | Default |
+|---|---|---|---|
+| `BANK_KEYINV` | Bank key not in bank master | PA0009 `BANKL` not found in `BNKA` for `BANKS` (country) | Warning |
+
+---
+
 `*` = already implemented today (rule unchanged except `BANK_IBAN`, which is
 loosened per this spec).
 
-**Tier 1 total: ~31 checks.** `N = 31` for the completeness denominator in
-catalogue version `CAT_2026_09`.
+**v1 total: 46 checks** (Tier 1 ≈ 34 + Tier 2 ≈ 12). `N = 46` for the
+completeness denominator in catalogue version `CAT_2026_09`.
 
 ---
 
@@ -221,15 +274,18 @@ catalogue version `CAT_2026_09`.
 
 Shipped in code, overridable per user (§2.1).
 
-**Critical (default):** `MAND_DOB`, `INVALID_DOB`, `MAND_GENDER`, `STAT_NATION`,
-`PERS_LASTNM`, `PERS_FIRSTN`, `ORG_ORGUNIT`, `ORG_POSITION`, `ORG_COSTCTR`,
-`ORG_EEGROUP`, `PAY_BASICPAY`, `BANK_IBAN`, `BANK_PAYMETH`, `BANK_XFERNOBK`,
-`CONTACT_ADDR`, `ADDR_COUNTRY`, `LEAVE_NEGBAL`.
+**Critical (default) — 20:** `MAND_DOB`, `INVALID_DOB`, `MAND_GENDER`,
+`STAT_NATION`, `PERS_LASTNM`, `PERS_FIRSTN`, `ORG_ORGUNIT`, `ORG_POSITION`,
+`ORG_COSTCTR`, `ORG_EEGROUP`, `PAY_BASICPAY`, `BANK_IBAN`, `BANK_PAYMETH`,
+`BANK_XFERNOBK`, `CONTACT_ADDR`, `ADDR_COUNTRY`, `LEAVE_NEGBAL`, `ID_NATIONAL`,
+`EMP_STATINC`, `WT_NOSCHED`.
 
-**Warning (default):** `PERS_MARITAL`, `PERS_LANG`, `ORG_JOB`, `ORG_PSUBAREA`,
-`ORG_ADMIN`, `PSCL_TYPEAREA`, `PSCL_GRPLEVEL`, `ADDR_STREET`, `ADDR_CITY`,
-`ADDR_POSTAL`, `CONTACT_MAIL`, `COMM_MOBILE`, `EDU_MISSING`, `QUAL_MISSING`,
-`QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `DOC_NONE`.
+**Warning (default) — 26:** `PERS_MARITAL`, `PERS_LANG`, `ORG_JOB`,
+`ORG_PSUBAREA`, `ORG_ADMIN`, `PSCL_TYPEAREA`, `PSCL_GRPLEVEL`, `ADDR_STREET`,
+`ADDR_CITY`, `ADDR_POSTAL`, `CONTACT_MAIL`, `COMM_MOBILE`, `EDU_MISSING`,
+`QUAL_MISSING`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `DOC_NONE`, `ID_EXPIRED`,
+`EMP_NOHIRE`, `EMP_RETIRE`, `WT_CAPACITY`, `WT_HOURS`, `CT_NOTYPE`, `CT_FIXNOEND`,
+`FAM_NOEMERG`, `BANK_KEYINV`.
 
 ---
 
@@ -237,12 +293,12 @@ Shipped in code, overridable per user (§2.1).
 
 ```
 Completeness %(employee) = (N − FailedCheckCount) / N × 100
-    N = number of checks in the active catalogue version (Tier 1: N = 31)
+    N = number of checks in the active catalogue version (CAT_2026_09: N = 46)
 ```
 
 - Every catalogue check counts toward `N` (D = Critical/Warning only, no "ignore").
-- Completeness is **relative to the catalogue version**. When Tier 2 checks are
-  added, `N` grows and the metric re-bases — record the catalogue version
+- Completeness is **relative to the catalogue version**. When checks are added or
+  removed, `N` changes and the metric re-bases — record the catalogue version
   alongside any stored/period comparison.
 - Org / area completeness = simple average of member employees' completeness.
 
@@ -279,23 +335,19 @@ Covers, subject to the customer's payroll configuration and country grouping(s)
 
 ---
 
-## 8. Tier 2 — defined backlog (after Tier 1)
+## 8. Tier 2 — new source views (in v1)
 
-One small new source view each, over a standard infotype the client certainly
-has. No country infotypes, no OM/CO joins.
-
-| Infotype | New view | Checks |
+| New view | Infotype | Feeds checks |
 |---|---|---|
-| **PA0185** | `ZI_HR360_EMP_ID` | National ID / SSN missing (presence + type) |
-| **PA0000** | `ZI_HR360_EMP_STATUS` | No hiring action / hire date missing; employment status inconsistent (active with no current PA0001, or withdrawn with active infotypes); active employee past retirement age (with PA0002) |
-| **PA0007** | `ZI_HR360_EMP_WTIME` | Work schedule rule (`SCHKZ`) missing; capacity utilisation / employment percent (`EMPCT`) zero; weekly hours (`WOSTD`) zero |
-| **PA0016** | `ZI_HR360_EMP_CONTRACT` | Contract type (`CTTYP`) missing; fixed-term contract with no end date; probation-period end missing |
-| **PA0021** | `ZI_HR360_EMP_FAMILY` | No emergency contact (subtype 6) |
-| **BNKA** (referential) | join in `ZI_HR360_EMP_BANK` | Bank key on PA0009 not present in the bank master |
+| `ZI_HR360_EMP_ID` | PA0185 | `ID_NATIONAL`, `ID_EXPIRED` |
+| `ZI_HR360_EMP_STATUS` | PA0000 | `EMP_NOHIRE`, `EMP_STATINC`, `EMP_RETIRE` |
+| `ZI_HR360_EMP_WTIME` | PA0007 | `WT_NOSCHED`, `WT_CAPACITY`, `WT_HOURS` |
+| `ZI_HR360_EMP_CONTRACT` | PA0016 | `CT_NOTYPE`, `CT_FIXNOEND` |
+| `ZI_HR360_EMP_FAMILY` | PA0021 | `FAM_NOEMERG` |
+| BNKA join added to `ZI_HR360_EMP_BANK` | BNKA | `BANK_KEYINV` |
 
-Adding Tier 2 = new `UNION` branches in `ZI_HR360_ISSUE`, new `CheckID`s, extend
-the default mapping, bump the catalogue version, increase `N`. **No dashboard code
-change** — it re-aggregates whatever checks the service returns.
+Same pattern as Tier 1 for the dashboard: it re-aggregates whatever the service
+returns — **no dashboard code change** when checks are added or removed.
 
 ---
 
@@ -323,16 +375,112 @@ change** — it re-aggregates whatever checks the service returns.
 
 ## 11. Build order
 
-1. **CDS** — extend the six source views with the extra fields; add the Tier-1
-   `UNION` branches to `ZI_HR360_ISSUE`; create `ZC_HR360_EMP_DQ`; expose
-   `EmployeeDq` on the service. Re-activate, confirm preview.
-2. **Dashboard controller** — page all `EmployeeDq` rows; severity model
-   (default + `localStorage`); rewrite every visual as a client-side aggregation
-   of `(scope, severity)`.
-3. **Checklist panel** — categories → checks, `Critical | Warning` toggles,
+Delivered in increments the user can import and verify one at a time (per
+`BUILD_ISSUES_LOG.md` §F — fix the first real error, re-activate, repeat).
+
+1. **CDS increment A — Tier 1 checks that need no source-view change** + create
+   `ZC_HR360_EMP_DQ` + extend `ZI_HR360_ISSUE`/`DataQualityIssue` with the org
+   fields + expose `EmployeeDq`. Import, activate all, preview `EmployeeDq` and
+   `DataQualityIssue`.
+2. **CDS increment B — remaining Tier 1**: add the extra fields to the 6 source
+   views (`FAMST`, `SPRSL`, `SACHA/P/Z`, `ZLSCH`), new presence views for PA2006
+   and TOA01, the rest of the Tier-1 `UNION` branches.
+3. **CDS increment C — Tier 2**: the 5 new source views (`ZI_HR360_EMP_ID`,
+   `_STATUS`, `_WTIME`, `_CONTRACT`, `_FAMILY`) + the BNKA join + their `UNION`
+   branches.
+4. **Dashboard controller** — page all `EmployeeDq` + `DataQualityIssue` rows;
+   severity model (default + `localStorage`); rewrite every visual as a
+   client-side aggregation of `(scope, severity)`.
+5. **Checklist panel** — categories → checks, `Critical | Warning` toggles,
    Apply / Reset, persistence.
-4. **Chart fixes** — §10.
-5. **Test** — counts reconcile against the executable reports; drill + severity
+6. **Chart fixes** — §10.
+7. **Help & tooltips** — §13.
+8. **Test** — counts reconcile against the executable reports; drill + severity
    toggle behave; first-load timing acceptable.
 
-Estimated ~1–1.5 weeks.
+Estimated ~2 weeks.
+
+---
+
+## 12. Assumptions to confirm
+
+Small config-dependent choices. Where unconfirmed, the build uses the **generic
+rule** in the right column and the check is refined later — no rework of the
+framework, just the one `WHERE` clause.
+
+| # | Question | Generic rule used if unconfirmed |
+|---|---|---|
+| Q1 | `EMP_RETIRE` retirement age threshold — 60 or 65? | age ≥ **60** |
+| Q2 | `ID_NATIONAL` — is there a specific PA0185 subtype for the statutory national ID? | flag if **zero** PA0185 records valid today |
+| Q3 | `EMP_NOHIRE` — which `MASSN` action types count as "hire"? | flag if **zero** PA0000 records |
+| Q4 | `FAM_NOEMERG` — emergency-contact subtype (standard `6`)? | PA0021 subtype **`6`** |
+| Q5 | `BANK_PAYMETH` / `BANK_XFERNOBK` — which `ZLSCH` values are bank transfer? | `BANK_IBAN` ships first; these two added once the codes are confirmed |
+| Q6 | `CT_FIXNOEND` — which `CTTYP` values are fixed-term? | flag if `CTTYP` maintained **and** `CTEDT` empty (any type) |
+| Q7 | Birthplace / country of birth (PA0002 `GBORT` / `GBLND`) — add as checks? | **not** included in v1 |
+
+---
+
+## 13. In-dashboard Help & tooltips
+
+The dashboard ships with its own guidance so a business user needs no external
+document.
+
+### 13.1 Help panel (`?` button in the page header → dialog / side panel)
+
+Sections:
+
+1. **What this dashboard shows** — one paragraph: a point-in-time data-quality
+   scan of every employee's HR master data against a catalogue of checks; you
+   choose which checks are Critical vs Warning; the whole page can be drilled by
+   organisation.
+2. **How an employee is classified** — the CRITICAL / WARNING / OK rule (§2.3),
+   and the completeness % formula (§6) in plain words.
+3. **The checks** — the full catalogue grouped by category, each with: friendly
+   name, what it looks at (infotype in business terms — "Bank details (IT0009)"),
+   the exact rule, and its current severity. Rendered from the same catalogue
+   metadata that drives the checklist, so it never drifts.
+4. **Using the severity checklist** — how to change a check's severity, that
+   changes are per-user and remembered in this browser, Reset restores defaults.
+5. **Drilling by organisation** — click a bar to go Company → Personnel area →
+   Org unit; the breadcrumb and every card follow; "View employees" opens the
+   filtered employee list.
+6. **Reading each card** — a short "how to read this" for the KPI strip, the
+   status donut, "failures by check", the org bar (and its metric toggle), and
+   the detail table.
+7. **Data currency & scope** — data is as of the last dashboard load; scope is
+   employees with a current organisational assignment; the user only sees
+   organisations they are authorised for.
+8. **What is *not* covered yet** — Payroll checks (parked, §7); Tier 3 checks
+   (§9). Stated so users don't assume completeness.
+
+### 13.2 Catalogue metadata (single source of truth)
+
+A JSON block in the app (`model/checkCatalogue.json`) — one entry per check:
+`{ id, category, name, description, infotypeLabel, ruleText, defaultSeverity }`.
+Drives the checklist panel, the Help "checks" section, the per-check chart labels
+and every check-related tooltip. Update this one file when a check is
+added/changed.
+
+### 13.3 Tooltips (hover / long-press)
+
+| Element | Tooltip |
+|---|---|
+| KPI card "Critical" | "Employees failing at least one check you marked Critical. {n} of {total} ({pct} %)." |
+| KPI card "Warning" | "Employees failing only Warning-level checks." |
+| KPI card "Fully clean" | "Employees passing all {N} checks in the catalogue." |
+| Donut segment | "{status}: {n} employees ({pct} %) in the current scope." |
+| "Failures by check" bar | the check's `name` + `ruleText` + `infotypeLabel` + "{n} employees affected in scope." |
+| Category bar (collapsed view) | "{category}: {n} employees failing one or more of its {k} checks." |
+| Org bar | "{node}: {metric label} {value}. Click to drill in." + current metric explanation |
+| Org-bar metric toggle | "% Critical = share of employees in the node that are CRITICAL. # Critical = count. Avg completeness = average of member completeness %." |
+| Breadcrumb node | "Showing {Company / Personnel area / Org unit} = {key}. Click a higher level to widen." |
+| Detail table "Critical" column header | "Number of employees (not issues) with CRITICAL status." |
+| Detail table "Compl. %" cell | "Average completeness of the {n} employees in this row." |
+| Checklist check row | the check's `ruleText` + `infotypeLabel` |
+| Checklist category header | "Set every check in {category} to the same severity." |
+| "Apply" | "Recalculate the dashboard with the current severity choices." |
+| "Reset" | "Restore the default Critical / Warning mapping." |
+| Refresh | "Reload employee data from the system." |
+
+Tooltips use `sap.m` `tooltip` / `sap.ui.core.Popup` where richer content is
+needed; all text comes from i18n so it is translatable.
