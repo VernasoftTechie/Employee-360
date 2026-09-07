@@ -239,6 +239,14 @@ extension, not blind in the CDS.
 8. `ZI_HR360_ISSUE.ddls.baseinfo` FROM list extended with `ZI_HR360_DOCUMENT`,
    `ZI_HR360_LEAVE`, `ZI_HR360_LEAVE_NEG`, `ZI_HR360_QUAL_STATUS`. 2 new
    `.ddls.xml` (BOM) + `.baseinfo` for the helper views.
+| A34 | 🔴 **OData V4 runtime**: dashboard shows `Duplicate key predicate: (EmployeeID='180001',CheckID='ADDR_POSTAL')` and every KPI is 0 (the V4 model rejects a duplicate key, `Promise.all` rejects, `_recompute` never runs). | `ZI_HR360_EMP_CONTACT` (and `_BANK` / `_PAY`) were **not one row per employee** — an employee with 2 current `PA0006` / `PA0105` records makes the LEFT JOIN in a `ZI_HR360_ISSUE` branch emit 2 identical `(EmployeeID, CheckID)` rows. The `…_MISSING` / presence checks were immune (their `is initial` filter drops multi-row joins) but the new field-level checks (`ADDR_STREET/CITY/POSTAL`, `PSCL_*`) are not. | (a) `ZI_HR360_EMP_CONTACT` / `_BANK` / `_PAY` rewritten as `max( … ) … group by pernr` — one row per employee, each field the populated current value if any record has it (correct semantic for "is it maintained"). (b) **Safety net**: `ZC_HR360_ISSUE` and `ZC_HR360_EMP_DQ` now `GROUP BY` every column (= `SELECT DISTINCT`) so no source multiplication can ever produce a duplicate OData key again. | v0.41 |
+
+**Rule:** any CDS view exposed as an OData V4 entity set, or feeding a `UNION`
+branch, must be **one row per its key** — infotypes with gaps/overlaps/subtypes
+(PA0006, PA0105, PA0009, PA0008…) need `max()` + `GROUP BY` or an explicit
+"current record" pick. Add `GROUP BY` (all columns) on the exposed projection as
+a belt-and-suspenders guard.
+
 **Increment D–G / review (v0.39–v0.40) — dashboard:**
 
 | U5 | 🟡 (caught in review, not yet observed) Client reads the **whole** `DataQualityIssue` (~60–90 k rows) and `EmployeeDq` (~41 k) by `$skip`/`$top` paging. Without `$orderby`, HANA `LIMIT/OFFSET` order is **not stable between pages** → rows silently missed or duplicated → wrong roster / wrong counts. | `_readAll` now passes a `Sorter` per key (`EmployeeID` for `EmployeeDq`; `EmployeeID`,`CheckID` for `DataQualityIssue`) → the V4 model sends `$orderby` and paging is deterministic. Also added `$select` (big payload cut) and `oList.destroy()` after each read. | v0.40 |

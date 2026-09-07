@@ -6,6 +6,11 @@
   typeNamePlural: 'Data Quality Issues'
 }
 
+// GROUP BY every column = SELECT DISTINCT. A source infotype view
+// (ZI_HR360_EMP_CONTACT / _PAY / _BANK) can return >1 row per employee when
+// the infotype has overlapping records; without this, a UNION branch that
+// joins it emits duplicate (EmployeeID, CheckID) keys and OData V4 rejects the
+// whole entity set ("Duplicate key predicate"). See BUILD_ISSUES_LOG A34.
 define view entity ZC_HR360_ISSUE
   as select from ZI_HR360_ISSUE
 {
@@ -56,3 +61,17 @@ define view entity ZC_HR360_ISSUE
       @UI.lineItem:       [{ position: 120 }]
       CostCenter
 }
+group by
+  EmployeeID,
+  CheckID,
+  Category,
+  Severity,
+  SeverityCriticality,
+  IssueDescription,
+  FieldName,
+  CompanyCode,
+  PersonnelArea,
+  PersonnelSubarea,
+  EmployeeGroup,
+  OrgUnit,
+  CostCenter
