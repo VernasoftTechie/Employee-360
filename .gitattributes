@@ -13,3 +13,4 @@
 *.properties text eol=lf
 *.yaml      text eol=lf
 *.html      text eol=lf
+*.css       text eol=lf
