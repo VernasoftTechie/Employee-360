@@ -274,3 +274,5 @@ order pinned to the client-side catalogue.
 **Rule:** every `sap.ui.core.HTML` `content` string must have exactly **one root
 element**. And never assume `requestContexts(0, N)` returns N — the gateway
 page-caps; loop against `$count`.
+
+| A36 | 🟡 (hardening) `FailureBitmask` built as `sum( case Iss.CheckID when 'X' then 2^k … end )` — if `ZI_HR360_ISSUE` ever emits a **duplicate** `(employee, CheckID)` row (e.g. a `PA0002` time-constraint-1 violation multiplies `ZI_HR360_EMP_BASIC`), `sum` **doubles that bit** → `2·2^k = 2^(k+1)` → the wrong check reads as failed and classification can shift. | Rebuilt as `sum( max( <0/1 per-check flag> ) * 2^k )` — `max()` of `0/1` is idempotent, so a duplicate row can never double a bit. (`TotalIssueCount` / `CompletenessPercent` already used `count( distinct )`; `QualityStatus` uses `… > 0` so it was already dup-robust.) | v0.47 |

@@ -34,42 +34,43 @@ define view entity ZI_HR360_EMP_KPI
       // ONLY this (via ZC_HR360_EMP_DQ) and decodes it client-side, instead of
       // paging the whole DataQualityIssue union (BUILD_ISSUES_LOG A35).
       // string_agg is not an aggregate on this release, so a bitmask it is.
+      // Built as sum( max( per-check flag ) * bit ) - max() is 0/1 so a
+      // duplicate ISSUE row can never double a bit (A36).
       // THE ORDER BELOW MUST MATCH the checkCatalogue.json array order
       // (ui/dashboard/webapp/model/checkCatalogue.json) - bit i = 2^i.
-      cast( sum( case Iss.CheckID
-        when 'MAND_DOB'      then          1
-        when 'INVALID_DOB'   then          2
-        when 'MAND_GENDER'   then          4
-        when 'STAT_NATION'   then          8
-        when 'PERS_LASTNM'   then         16
-        when 'PERS_FIRSTN'   then         32
-        when 'PERS_MARITAL'  then         64
-        when 'ORG_ORGUNIT'   then        128
-        when 'ORG_POSITION'  then        256
-        when 'ORG_COSTCTR'   then        512
-        when 'ORG_EEGROUP'   then       1024
-        when 'ORG_JOB'       then       2048
-        when 'ORG_PSUBAREA'  then       4096
-        when 'ORG_ADMIN'     then       8192
-        when 'PAY_BASICPAY'  then      16384
-        when 'PSCL_TYPE'     then      32768
-        when 'PSCL_GRP'      then      65536
-        when 'BANK_IBAN'     then     131072
-        when 'BANK_PAYMETH'  then     262144
-        when 'CONTACT_MAIL'  then     524288
-        when 'COMM_MOBILE'   then    1048576
-        when 'CONTACT_ADDR'  then    2097152
-        when 'ADDR_STREET'   then    4194304
-        when 'ADDR_CITY'     then    8388608
-        when 'ADDR_POSTAL'   then   16777216
-        when 'EDU_MISSING'   then   33554432
-        when 'QUAL_MISSING'  then   67108864
-        when 'QUAL_EXPIRED'  then  134217728
-        when 'LEAVE_NOQUOTA' then  268435456
-        when 'LEAVE_NEGBAL'  then  536870912
-        when 'DOC_NONE'      then 1073741824
-        else 0
-      end ) as abap.int4 )                                                   as FailureBitmask
+      cast(
+          max( case when Iss.CheckID = 'MAND_DOB'      then 1 else 0 end ) *          1
+        + max( case when Iss.CheckID = 'INVALID_DOB'   then 1 else 0 end ) *          2
+        + max( case when Iss.CheckID = 'MAND_GENDER'   then 1 else 0 end ) *          4
+        + max( case when Iss.CheckID = 'STAT_NATION'   then 1 else 0 end ) *          8
+        + max( case when Iss.CheckID = 'PERS_LASTNM'   then 1 else 0 end ) *         16
+        + max( case when Iss.CheckID = 'PERS_FIRSTN'   then 1 else 0 end ) *         32
+        + max( case when Iss.CheckID = 'PERS_MARITAL'  then 1 else 0 end ) *         64
+        + max( case when Iss.CheckID = 'ORG_ORGUNIT'   then 1 else 0 end ) *        128
+        + max( case when Iss.CheckID = 'ORG_POSITION'  then 1 else 0 end ) *        256
+        + max( case when Iss.CheckID = 'ORG_COSTCTR'   then 1 else 0 end ) *        512
+        + max( case when Iss.CheckID = 'ORG_EEGROUP'   then 1 else 0 end ) *       1024
+        + max( case when Iss.CheckID = 'ORG_JOB'       then 1 else 0 end ) *       2048
+        + max( case when Iss.CheckID = 'ORG_PSUBAREA'  then 1 else 0 end ) *       4096
+        + max( case when Iss.CheckID = 'ORG_ADMIN'     then 1 else 0 end ) *       8192
+        + max( case when Iss.CheckID = 'PAY_BASICPAY'  then 1 else 0 end ) *      16384
+        + max( case when Iss.CheckID = 'PSCL_TYPE'     then 1 else 0 end ) *      32768
+        + max( case when Iss.CheckID = 'PSCL_GRP'      then 1 else 0 end ) *      65536
+        + max( case when Iss.CheckID = 'BANK_IBAN'     then 1 else 0 end ) *     131072
+        + max( case when Iss.CheckID = 'BANK_PAYMETH'  then 1 else 0 end ) *     262144
+        + max( case when Iss.CheckID = 'CONTACT_MAIL'  then 1 else 0 end ) *     524288
+        + max( case when Iss.CheckID = 'COMM_MOBILE'   then 1 else 0 end ) *    1048576
+        + max( case when Iss.CheckID = 'CONTACT_ADDR'  then 1 else 0 end ) *    2097152
+        + max( case when Iss.CheckID = 'ADDR_STREET'   then 1 else 0 end ) *    4194304
+        + max( case when Iss.CheckID = 'ADDR_CITY'     then 1 else 0 end ) *    8388608
+        + max( case when Iss.CheckID = 'ADDR_POSTAL'   then 1 else 0 end ) *   16777216
+        + max( case when Iss.CheckID = 'EDU_MISSING'   then 1 else 0 end ) *   33554432
+        + max( case when Iss.CheckID = 'QUAL_MISSING'  then 1 else 0 end ) *   67108864
+        + max( case when Iss.CheckID = 'QUAL_EXPIRED'  then 1 else 0 end ) *  134217728
+        + max( case when Iss.CheckID = 'LEAVE_NOQUOTA' then 1 else 0 end ) *  268435456
+        + max( case when Iss.CheckID = 'LEAVE_NEGBAL'  then 1 else 0 end ) *  536870912
+        + max( case when Iss.CheckID = 'DOC_NONE'      then 1 else 0 end ) * 1073741824
+      as abap.int4 )                                                           as FailureBitmask
 }
 group by
   Emp.EmployeeID
