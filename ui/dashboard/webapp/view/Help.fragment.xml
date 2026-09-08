@@ -25,6 +25,10 @@
         <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpCardsText}"/>
       </Panel>
 
+      <Panel expandable="true" expanded="false" headerText="{i18n>helpMath}">
+        <Text class="sapUiSmallMargin" renderWhitespace="true" text="{i18n>helpMathText}"/>
+      </Panel>
+
       <Panel expandable="true" expanded="false"
         headerText="{i18n>helpChecks} ({= ${/catalogue}.length })">
         <Table items="{path: '/catalogue', sorter: {path: 'catLabel', group: true}}" mode="None">

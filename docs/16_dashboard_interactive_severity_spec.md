@@ -449,6 +449,15 @@ Sections:
 6. **Reading each card** — a short "how to read this" for the KPI strip, the
    status donut, "failures by check", the org bar (and its metric toggle), and
    the detail table.
+6a. **How the numbers are calculated** — spells out that the Overview counts two
+   different things that need not agree: **Data score** is average checklist
+   completeness with severity ignored (a missing IBAN and a missing mobile cost
+   the same), whereas the **CRITICAL / WARNING / FULLY CLEAN** cards bucket each
+   employee by their *worst* failed check — so an employee with a Critical gap is
+   never counted in WARNING even when they also fail Warning checks. Includes a
+   worked 5-employee example reconciling an 86.5% score with 5 Critical / 0
+   Warning, and notes that Warning checks still surface in "Where the data
+   breaks" (they are masked at employee level, not lost).
 7. **Data currency & scope** — data is as of the last dashboard load; scope is
    employees with a current organisational assignment; the user only sees
    organisations they are authorised for.
@@ -521,7 +530,7 @@ options for the customer, not commitments:
 | **A** | `ZC_HR360_EMP_DQ` roster view; `ZI_HR360_ISSUE` + `DataQualityIssue` extended with 6 org fields; Tier-1 checks needing no source-view change (`PERS_LASTNM`, `PERS_FIRSTN`, `ORG_ORGUNIT`, `ORG_JOB`, `ORG_EEGROUP`, `ORG_PSUBAREA`, `PSCL_TYPE`, `PSCL_GRP`, `COMM_MOBILE`); `BANK_IBAN` loosened (IBAN **or** bank key + account); completeness divisor 12 → 21 in the 3 aggregate views; test class refreshed | **21** | v0.36 | ✅ imported & activated by ABAP |
 | **B** | `ZI_HR360_EMP_BASIC` += `FAMST`/`SACHA-P-Z`; `ZI_HR360_EMP_BANK` += `ZLSCH`; 2 helper views (`ZI_HR360_QUAL_STATUS`, `ZI_HR360_LEAVE_NEG`); +10 checks (`PERS_MARITAL`, `ORG_ADMIN`, `BANK_PAYMETH`, `ADDR_STREET`, `ADDR_CITY`, `ADDR_POSTAL`, `QUAL_EXPIRED`, `LEAVE_NOQTA`, `LEAVE_NEGBAL`, `DOC_NONE`); divisor 21 → 31; test class +4 methods | **31** | v0.38 | awaiting import + activation + preview |
 | C | Tier-2 source views (PA0185/PA0000/PA0007/PA0016/PA0021) + BNKA join + branches; `PERS_DOBAGE` (deferred from B — needs `dats_add_days` syntax verified); `ZI_HR360_CHECK_CATALOG` (removes the hard-coded divisor) | ~45 | — | not started |
-| D-G | dashboard rewrite: client-side aggregation of EmployeeDq + DataQualityIssue; org drill re-scopes every card; severity checklist panel (Critical/Warning per check, localStorage); metric toggle on org bar; by-check/by-category toggle; detail table shows # critical EMPLOYEES; Help panel (9 topics + enhancement list) + checkCatalogue.json single-source | — | v0.39 | UI - awaiting local test by Fiori consultant |
+| D-G | dashboard rewrite: client-side aggregation of EmployeeDq + DataQualityIssue; org drill re-scopes every card; severity checklist panel (Critical/Warning per check, localStorage); metric toggle on org bar; by-check/by-category toggle; detail table shows # critical EMPLOYEES; Help panel (10 topics + enhancement list) + checkCatalogue.json single-source | — | v0.39 | UI - awaiting local test by Fiori consultant |
 | E | severity checklist panel + persistence | — | — | not started |
 | F | chart fixes (§10) | — | — | not started |
 | G | Help panel + tooltips + `Checks` catalogue source (§13) | — | — | not started |
