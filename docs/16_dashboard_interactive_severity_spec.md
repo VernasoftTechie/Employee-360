@@ -209,7 +209,7 @@ first and add these two right after.)*
 
 | CheckID | Check | Rule | Default |
 |---|---|---|---|
-| `LEAVE_NOQUOTA` | No leave quota / entitlement | zero PA2006 rows valid this year | Warning |
+| `LEAVE_NOQTA` | No leave quota / entitlement | zero PA2006 rows valid this year | Warning |
 | `LEAVE_NEGBAL` | Negative leave balance | `ANZHL − KVERB` < 0 on any current quota | Critical |
 
 ### Documents  (ArchiveLink TOA01)  — T1
@@ -285,7 +285,7 @@ Shipped in code, overridable per user (§2.1).
 **Warning (default) — 25:** `PERS_MARITAL`, `ORG_JOB`,
 `ORG_PSUBAREA`, `ORG_ADMIN`, `PSCL_TYPE`, `PSCL_GRP`, `ADDR_STREET`,
 `ADDR_CITY`, `ADDR_POSTAL`, `CONTACT_MAIL`, `COMM_MOBILE`, `EDU_MISSING`,
-`QUAL_MISSING`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `DOC_NONE`, `ID_EXPIRED`,
+`QUAL_MISSING`, `QUAL_EXPIRED`, `LEAVE_NOQTA`, `DOC_NONE`, `ID_EXPIRED`,
 `EMP_NOHIRE`, `EMP_RETIRE`, `WT_CAPACITY`, `WT_HOURS`, `CT_NOTYPE`, `CT_FIXNOEND`,
 `FAM_NOEMERG`, `BANK_KEYINV`.
 
@@ -519,7 +519,7 @@ options for the customer, not commitments:
 | Increment | Contents | Catalogue branches | Commit | State |
 |---|---|---|---|---|
 | **A** | `ZC_HR360_EMP_DQ` roster view; `ZI_HR360_ISSUE` + `DataQualityIssue` extended with 6 org fields; Tier-1 checks needing no source-view change (`PERS_LASTNM`, `PERS_FIRSTN`, `ORG_ORGUNIT`, `ORG_JOB`, `ORG_EEGROUP`, `ORG_PSUBAREA`, `PSCL_TYPE`, `PSCL_GRP`, `COMM_MOBILE`); `BANK_IBAN` loosened (IBAN **or** bank key + account); completeness divisor 12 → 21 in the 3 aggregate views; test class refreshed | **21** | v0.36 | ✅ imported & activated by ABAP |
-| **B** | `ZI_HR360_EMP_BASIC` += `FAMST`/`SACHA-P-Z`; `ZI_HR360_EMP_BANK` += `ZLSCH`; 2 helper views (`ZI_HR360_QUAL_STATUS`, `ZI_HR360_LEAVE_NEG`); +10 checks (`PERS_MARITAL`, `ORG_ADMIN`, `BANK_PAYMETH`, `ADDR_STREET`, `ADDR_CITY`, `ADDR_POSTAL`, `QUAL_EXPIRED`, `LEAVE_NOQUOTA`, `LEAVE_NEGBAL`, `DOC_NONE`); divisor 21 → 31; test class +4 methods | **31** | v0.38 | awaiting import + activation + preview |
+| **B** | `ZI_HR360_EMP_BASIC` += `FAMST`/`SACHA-P-Z`; `ZI_HR360_EMP_BANK` += `ZLSCH`; 2 helper views (`ZI_HR360_QUAL_STATUS`, `ZI_HR360_LEAVE_NEG`); +10 checks (`PERS_MARITAL`, `ORG_ADMIN`, `BANK_PAYMETH`, `ADDR_STREET`, `ADDR_CITY`, `ADDR_POSTAL`, `QUAL_EXPIRED`, `LEAVE_NOQTA`, `LEAVE_NEGBAL`, `DOC_NONE`); divisor 21 → 31; test class +4 methods | **31** | v0.38 | awaiting import + activation + preview |
 | C | Tier-2 source views (PA0185/PA0000/PA0007/PA0016/PA0021) + BNKA join + branches; `PERS_DOBAGE` (deferred from B — needs `dats_add_days` syntax verified); `ZI_HR360_CHECK_CATALOG` (removes the hard-coded divisor) | ~45 | — | not started |
 | D-G | dashboard rewrite: client-side aggregation of EmployeeDq + DataQualityIssue; org drill re-scopes every card; severity checklist panel (Critical/Warning per check, localStorage); metric toggle on org bar; by-check/by-category toggle; detail table shows # critical EMPLOYEES; Help panel (9 topics + enhancement list) + checkCatalogue.json single-source | — | v0.39 | UI - awaiting local test by Fiori consultant |
 | E | severity checklist panel + persistence | — | — | not started |

@@ -211,7 +211,7 @@ CLASS zcl_hr360_issue_test IMPLEMENTATION.
     put_complete_employee( '00000010' ).
     CLEAR td_leave.
     cl_abap_unit_assert=>assert_equals(
-      act = count_check( iv_pernr = '00000010' iv_check = 'LEAVE_NOQUOTA' ) exp = 1 ).
+      act = count_check( iv_pernr = '00000010' iv_check = 'LEAVE_NOQTA' ) exp = 1 ).
   ENDMETHOD.
 
   METHOD expired_quals_flagged.

@@ -576,7 +576,7 @@ union all
     left outer join ZI_HR360_LEAVE as Lv on Lv.EmployeeID = Emp.EmployeeID
 {
   key Emp.EmployeeID                                       as EmployeeID,
-  key cast( 'LEAVE_NOQUOTA' as abap.char( 12 ) )           as CheckID,
+  key cast( 'LEAVE_NOQTA' as abap.char( 12 ) )           as CheckID,
       cast( 'LEAVE' as abap.char( 20 ) )                   as Category,
       cast( 'W' as abap.char( 1 ) )                        as Severity,
       cast( 2 as abap.int4 )                               as SeverityCriticality,

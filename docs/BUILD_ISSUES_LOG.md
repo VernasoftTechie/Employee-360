@@ -225,7 +225,7 @@ extension, not blind in the CDS.
 3. **2 helper views** — `ZI_HR360_QUAL_STATUS` (per-employee qual counts, for
    `QUAL_EXPIRED`), `ZI_HR360_LEAVE_NEG` (employees with a current negative quota,
    for `LEAVE_NEGBAL`). Both group-by views over existing `ZI_` views.
-4. `LEAVE_NOQUOTA` / `DOC_NONE` reuse the `EDU_MISSING` pattern (left join to
+4. `LEAVE_NOQTA` / `DOC_NONE` reuse the `EDU_MISSING` pattern (left join to
    `ZI_HR360_LEAVE` / `ZI_HR360_DOCUMENT`, `where …EmployeeID is initial`).
 5. `ADDR_STREET/CITY/POSTAL` fire only when `Con.Country is not initial` (address
    record exists) so they don't double-count the "no address" case that
@@ -276,3 +276,9 @@ element**. And never assume `requestContexts(0, N)` returns N — the gateway
 page-caps; loop against `$count`.
 
 | A36 | 🟡 (hardening) `FailureBitmask` built as `sum( case Iss.CheckID when 'X' then 2^k … end )` — if `ZI_HR360_ISSUE` ever emits a **duplicate** `(employee, CheckID)` row (e.g. a `PA0002` time-constraint-1 violation multiplies `ZI_HR360_EMP_BASIC`), `sum` **doubles that bit** → `2·2^k = 2^(k+1)` → the wrong check reads as failed and classification can shift. | Rebuilt as `sum( max( <0/1 per-check flag> ) * 2^k )` — `max()` of `0/1` is idempotent, so a duplicate row can never double a bit. (`TotalIssueCount` / `CompletenessPercent` already used `count( distinct )`; `QualityStatus` uses `… > 0` so it was already dup-robust.) | v0.47 |
+| A37 | 🔴 `Error in SELECTLIST_ENTRY FAILUREBITMASK … Literal is not compatible with type CHAR(000012) : 'LEAVE_NOQUOTA'` — `ZI_HR360_EMP_KPI` would not activate. | `CheckID` is `CHAR(12)`; `'LEAVE_NOQUOTA'` is **13 chars**. `cast( 'LEAVE_NOQUOTA' as abap.char( 12 ) )` in the `ZI_HR360_ISSUE` branch had **silently truncated** it to `'LEAVE_NOQUOT'` since increment B — so `DataQualityIssue` carried the truncated id and `checkCatalogue.json`'s 13-char id never matched it anyway. The v0.47 `FailureBitmask` rewrite compares with `max( case when Iss.CheckID = 'LEAVE_NOQUOTA' … )` — a strict `=` against a `CHAR(12)` column **rejects** the over-length literal instead of truncating it. | Renamed `LEAVE_NOQUOTA` → **`LEAVE_NOQTA`** (11 chars) in `ZI_HR360_ISSUE`, `ZI_HR360_EMP_KPI`, `ZCL_HR360_ISSUE_TEST`, `checkCatalogue.json`, `docs/16`. | v0.48 |
+
+**Rule:** every `CheckID` literal is `CHAR(12)` — **keep it ≤ 12 characters**.
+`cast( '<literal>' as abap.char( 12 ) )` truncates a longer one *silently*; a
+later `Iss.CheckID = '<literal>'` then rejects it. Check new check ids against 12
+before adding a branch.

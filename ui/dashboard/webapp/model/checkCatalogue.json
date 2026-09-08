@@ -47,7 +47,7 @@
     { "id": "QUAL_MISSING", "cat": "EDU", "name": "No qualification / skill",              "rule": "No Qualifications infotype record on file.",                          "infotype": "Qualifications (IT0024)",       "sev": "W" },
     { "id": "QUAL_EXPIRED", "cat": "EDU", "name": "All qualifications expired",            "rule": "Qualifications exist but every one has lapsed.",                      "infotype": "Qualifications (IT0024)",       "sev": "W" },
 
-    { "id": "LEAVE_NOQUOTA","cat": "LEAVE", "name": "No leave quota on file",              "rule": "No Absence Quotas infotype record.",                                 "infotype": "Absence Quotas (IT2006)",      "sev": "W" },
+    { "id": "LEAVE_NOQTA",  "cat": "LEAVE", "name": "No leave quota on file",              "rule": "No Absence Quotas infotype record.",                                 "infotype": "Absence Quotas (IT2006)",      "sev": "W" },
     { "id": "LEAVE_NEGBAL", "cat": "LEAVE", "name": "Leave balance is negative",           "rule": "A current quota has been deducted below zero.",                       "infotype": "Absence Quotas (IT2006)",      "sev": "C" },
 
     { "id": "DOC_NONE",     "cat": "DOCS", "name": "No personnel documents on file",       "rule": "No ArchiveLink documents linked to the personnel number.",            "infotype": "ArchiveLink (TOA01)",          "sev": "W" }

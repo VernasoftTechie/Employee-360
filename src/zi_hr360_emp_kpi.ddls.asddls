@@ -67,7 +67,7 @@ define view entity ZI_HR360_EMP_KPI
         + max( case when Iss.CheckID = 'EDU_MISSING'   then 1 else 0 end ) *   33554432
         + max( case when Iss.CheckID = 'QUAL_MISSING'  then 1 else 0 end ) *   67108864
         + max( case when Iss.CheckID = 'QUAL_EXPIRED'  then 1 else 0 end ) *  134217728
-        + max( case when Iss.CheckID = 'LEAVE_NOQUOTA' then 1 else 0 end ) *  268435456
+        + max( case when Iss.CheckID = 'LEAVE_NOQTA' then 1 else 0 end ) *  268435456
         + max( case when Iss.CheckID = 'LEAVE_NEGBAL'  then 1 else 0 end ) *  536870912
         + max( case when Iss.CheckID = 'DOC_NONE'      then 1 else 0 end ) * 1073741824
       as abap.int4 )                                                           as FailureBitmask
