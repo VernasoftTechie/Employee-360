@@ -14,6 +14,13 @@ an employee profile query service plus an HR data-quality / audit reporting laye
 > read-only OData V4 service (no RAP BO wrapper yet); child facets, UI metadata
 > extensions, org hierarchy and text columns are staged for later increments.
 
+> 📘 **Working on this (or any Vernasoft SAP delivery)? Start with
+> [`docs/00_BOLT_PLAYBOOK.md`](docs/00_BOLT_PLAYBOOK.md)** — the cross-project
+> engineering playbook: the pre-commit Commit Gate (repo / package / naming), the
+> New Requirement Protocol with a scoping-document template, the phasing doctrine,
+> and the full situation → resolution rulebook. `CLAUDE.md` points every AI session
+> to it.
+
 ---
 
 ## Repository layout
