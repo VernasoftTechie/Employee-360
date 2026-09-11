@@ -640,6 +640,7 @@ hand-rolling anything in §6.1.
 | D3 | `TABLES` statement in a report | `DATA gv_x` + `SELECT-OPTIONS … FOR gv_x` |
 | D5 | `FILTER … USING KEY` in a test | use `SELECT COUNT(*)` |
 | D6 | Dump `CALL_FUNCTION_CONFLICT_TYPE` passing a `TYPE string` actual to a classic FM | classic (pre-Unicode-era) function modules (`SSF_*`, old BAPIs) often have fixed-length `C`/`N`/`D`/`T` typed parameters, not `STRING` — declare a fixed-length local, assign the string to it, pass that instead |
+| D7 | "X must be a character-like field (data type C, N, D, or T)" on a classic offset/length access (`field+off(len)`) | that variable is `TYPE string`, not fixed `C/N/D/T` — classic offset/length notation only works on fixed-length types. An inline `DATA(x) = to_upper( ... )` (or any string built-in) infers `TYPE string`; declare the target explicitly as a fixed type (e.g. a DDIC char field) and assign via `=` instead of inline `DATA()` when it will later need offset/length access **or** by-reference `IMPORTING` binding to a fixed-type formal (Utility-Class-and-Method engineering log T2/T3: by-reference `IMPORTING` needs an exactly-compatible type, not just a convertible one) |
 | A20 | "R already declared with type S_PERNR" | distinct loop var per inline `FOR` |
 | A23 | `CX_SALV_EXISTING` not caught | catch `cx_salv_error` (the superclass) |
 | — | `RETURNING` + `EXPORTING` together | `RETURNING` takes only `IMPORTING` alongside |
