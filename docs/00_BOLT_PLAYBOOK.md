@@ -639,6 +639,7 @@ hand-rolling anything in §6.1.
 |---|---|---|
 | D3 | `TABLES` statement in a report | `DATA gv_x` + `SELECT-OPTIONS … FOR gv_x` |
 | D5 | `FILTER … USING KEY` in a test | use `SELECT COUNT(*)` |
+| D6 | Dump `CALL_FUNCTION_CONFLICT_TYPE` passing a `TYPE string` actual to a classic FM | classic (pre-Unicode-era) function modules (`SSF_*`, old BAPIs) often have fixed-length `C`/`N`/`D`/`T` typed parameters, not `STRING` — declare a fixed-length local, assign the string to it, pass that instead |
 | A20 | "R already declared with type S_PERNR" | distinct loop var per inline `FOR` |
 | A23 | `CX_SALV_EXISTING` not caught | catch `cx_salv_error` (the superclass) |
 | — | `RETURNING` + `EXPORTING` together | `RETURNING` takes only `IMPORTING` alongside |
