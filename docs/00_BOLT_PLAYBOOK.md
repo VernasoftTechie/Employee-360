@@ -98,7 +98,7 @@ done
 | **ZAB_V1_UT utility framework** | `VernasoftTechie/Utility-Class-and-Method` | `ZABAP_UTIL` | `AB_V1_UT` | `main`, staged commits | **yes** (`src/package.devc.xml`) | `docs/00_engineering_log.md`, root `CLAUDE.md`, `docs/07_object_package_map.md` |
 | **Dangote Customer BP API** | `VernasoftTechie/Dangote_Requirements` | `ZABAP_UTIL` | `CUST_BP` | `main`, direct push | check | its own build notes; abapGit XML format notes (§5.4) |
 | **ESS Loan Request** | *(confirm before commit)* | *(confirm)* | `ESS` / `ZESS_*` | *(confirm)* | *(confirm)* | `memory:ess_project_context` |
-| **Smart Form to Adobe Form Migration** | `VernasoftTechie/Smartform-Adobe-Migration` | `ZFORM_UTIL` | `SF2AF` | `main`, direct push | **yes** (`src/package.devc.xml`) | `docs/01_scope.md` (risk framework + phase plan), `docs/02_legacy_grab_spec.md`, `memory:smartform_adobe_migration_project` |
+| **Smart Form to Adobe Form Migration** | `VernasoftTechie/Smartform-Adobe-Migration` | `ZABAP_UTIL` (shared, existing) | `SF2AF` | `main`, direct push | **yes** (`src/package.devc.xml`, repo-specific CTEXT, Dangote-style) | `docs/01_scope.md` (risk framework + phase plan), `docs/02_legacy_grab_spec.md`, `memory:smartform_adobe_migration_project` |
 
 > ⚠️ **`ZBP_` is reserved for RAP behaviour pools.** Never use `ZBP_*` for a normal class,
 > DDIC object or API handler (Dangote hit this — renamed `ZBP_CUST_*` → `ZCUST_BP_*`).
