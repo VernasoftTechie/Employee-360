@@ -633,6 +633,7 @@ hand-rolling anything in §6.1.
 | — | `.abapgit.xml` format | bare `<asx:abap>`, no `<abapGit>` wrapper |
 | — | `.tabl.xml` / `.ttyp.xml` | DD03P: no `<POSITION>`/`<TABNAME>`, yes `<ADMINFIELD>0</ADMINFIELD>`+`<COMPTYPE>`; DD40V: no `<TYPELEN>` |
 | — | dangling `.clas.xml` without `.abap` | always write both together |
+| G14 | new object file placed in the repo never shows up when abapGit pulls, even though its content is valid | it's outside `STARTING_FOLDER` (usually `/src/`) or matches an `<IGNORE>` pattern (often `/docs/*`) in that repo's own `.abapgit.xml` — check that file *before* placing anything new, for every object type, not just ones you've placed there before |
 
 ### ABAP code
 | # | Situation | Resolution |
